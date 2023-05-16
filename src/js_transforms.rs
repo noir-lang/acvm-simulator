@@ -1,6 +1,8 @@
-use acvm::{acir::native_types::Witness, FieldElement};
+use acvm::{
+    acir::native_types::{Witness, WitnessMap},
+    FieldElement,
+};
 use js_sys::JsString;
-use std::collections::BTreeMap;
 use wasm_bindgen::JsValue;
 
 pub(crate) fn js_value_to_field_element(js_value: JsValue) -> Result<FieldElement, JsString> {
@@ -18,8 +20,8 @@ pub(crate) fn field_element_to_js_string(field_element: &FieldElement) -> JsStri
     format!("0x{}", field_element.to_hex()).into()
 }
 
-pub(crate) fn js_map_to_witness_map(js_map: js_sys::Map) -> BTreeMap<Witness, FieldElement> {
-    let mut witness_map: BTreeMap<Witness, FieldElement> = BTreeMap::new();
+pub(crate) fn js_map_to_witness_map(js_map: js_sys::Map) -> WitnessMap {
+    let mut witness_map = WitnessMap::new();
     js_map.for_each(&mut |value, key| {
         let witness_index = Witness(key.as_f64().unwrap() as u32);
         let witness_value = js_value_to_field_element(value).unwrap();
@@ -28,7 +30,7 @@ pub(crate) fn js_map_to_witness_map(js_map: js_sys::Map) -> BTreeMap<Witness, Fi
     witness_map
 }
 
-pub(crate) fn witness_map_to_js_map(witness_map: BTreeMap<Witness, FieldElement>) -> js_sys::Map {
+pub(crate) fn witness_map_to_js_map(witness_map: WitnessMap) -> js_sys::Map {
     let js_map = js_sys::Map::new();
     for (key, value) in witness_map {
         js_map.set(&js_sys::Number::from(key.witness_index()), &field_element_to_js_string(&value));
@@ -40,7 +42,10 @@ pub(crate) fn witness_map_to_js_map(witness_map: BTreeMap<Witness, FieldElement>
 mod test {
     use std::collections::BTreeMap;
 
-    use acvm::{acir::native_types::Witness, FieldElement};
+    use acvm::{
+        acir::native_types::{Witness, WitnessMap},
+        FieldElement,
+    };
     use wasm_bindgen::JsValue;
     use wasm_bindgen_test::*;
 
@@ -53,6 +58,7 @@ mod test {
             (Witness(2), FieldElement::zero()),
             (Witness(3), -FieldElement::one()),
         ]);
+        let witness_map = WitnessMap::from(witness_map);
 
         let js_map = witness_map_to_js_map(witness_map);
 
