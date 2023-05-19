@@ -27,5 +27,8 @@ jobs:
       - name: Build wasm crate
         run: ./build-wasm
 
+      - name: Set up test environment
+        uses: ./.github/actions/setup
+
       - name: Run node tests
         run: yarn test
