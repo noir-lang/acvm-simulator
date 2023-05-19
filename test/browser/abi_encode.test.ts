@@ -1,5 +1,5 @@
 import { html, fixture, expect } from "@open-wc/testing";
-import "../../my-element.js";
+import "./boilerplate/my_element";
 
 describe("noir wasm compilation", () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
