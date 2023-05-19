@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { abi_encode, abi_decode, execute_circuit } from "../pkg/";
+import { abi_encode, abi_decode, execute_circuit } from "../../pkg/";
 
 test("successfully executes circuit and extracts return value", async () => {
   // Noir program which enforces that x != y and returns x + y.
