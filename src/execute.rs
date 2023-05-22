@@ -15,9 +15,9 @@ use acvm::{
 
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
-use crate::js_transforms::{
-    field_element_to_js_string, js_map_to_witness_map, js_value_to_field_element,
-    witness_map_to_js_map,
+use crate::{
+    js_transforms::{field_element_to_js_string, js_value_to_field_element},
+    JsWitnessMap,
 };
 
 #[derive(Default)]
@@ -158,15 +158,39 @@ impl PartialWitnessGenerator for SimulatedBackend {
     }
 }
 
+#[wasm_bindgen(typescript_custom_section)]
+const ORACLE_CALLBACK: &'static str = r#"
+/**
+ * A callback which performs an oracle call and returns the response as an array of outputs.
+ * @callback OracleCallback
+ * @param {string} name - The identifier for the type of oracle call being performed.
+ * @param {string[]} inputs - An array of hex encoded inputs to the oracle call.
+ * @returns {Promise<string[]>} outputs - An array of hex encoded outputs containing the results of the oracle call.
+ */
+export type OracleCallback = (name: string, inputs: string[]) => Promise<string[]>;
+"#;
+
 #[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(extends = js_sys::Function, typescript_type = "OracleCallback")]
+    pub type OracleCallback;
+}
+
+/// Executes an ACIR circuit to generate the solved witness from the initial witness.
+///
+/// @param {Uint8Array} circuit - A serialized representation of an ACIR circuit
+/// @param {WitnessMap} initial_witness - The initial witness map defining all of the inputs to `circuit`..
+/// @param {OracleCallback} oracle_callback - A callback to process oracle calls from the circuit.
+/// @returns {WitnessMap} The solved witness calculated by executing the circuit on the provided inputs.
+#[wasm_bindgen(js_name = executeCircuit, skip_jsdoc)]
 pub async fn execute_circuit(
     circuit: Vec<u8>,
-    initial_witness: js_sys::Map,
-    oracle_resolver: js_sys::Function,
-) -> Result<js_sys::Map, JsValue> {
+    initial_witness: JsWitnessMap,
+    oracle_callback: OracleCallback,
+) -> Result<JsWitnessMap, JsValue> {
     console_error_panic_hook::set_once();
     let circuit: Circuit = Circuit::read(&*circuit).expect("Failed to deserialize circuit");
-    let mut witness_map = js_map_to_witness_map(initial_witness);
+    let mut witness_map = WitnessMap::from(initial_witness);
 
     let backend = SimulatedBackend::default();
     let mut blocks = Blocks::default();
@@ -185,7 +209,7 @@ pub async fn execute_circuit(
                 // Perform all oracle queries
                 let oracle_call_futures: Vec<_> = required_oracle_data
                     .into_iter()
-                    .map(|oracle_call| resolve_oracle(&oracle_resolver, oracle_call))
+                    .map(|oracle_call| resolve_oracle(&oracle_callback, oracle_call))
                     .collect();
 
                 // Insert results into the witness map
@@ -207,7 +231,7 @@ pub async fn execute_circuit(
         }
     }
 
-    Ok(witness_map_to_js_map(witness_map))
+    Ok(witness_map.into())
 }
 
 fn insert_value(
@@ -230,7 +254,7 @@ fn insert_value(
 }
 
 async fn resolve_oracle(
-    oracle_resolver: &js_sys::Function,
+    oracle_callback: &OracleCallback,
     mut unresolved_oracle_call: OracleData,
 ) -> Result<OracleData, String> {
     // Prepare to call
@@ -244,7 +268,7 @@ async fn resolve_oracle(
 
     // Call and await
     let this = JsValue::null();
-    let ret_js_val = oracle_resolver
+    let ret_js_val = oracle_callback
         .call2(&this, &name, &inputs)
         .map_err(|err| format!("Error calling oracle_resolver: {}", format_js_err(err)))?;
     let ret_js_prom: js_sys::Promise = ret_js_val.into();

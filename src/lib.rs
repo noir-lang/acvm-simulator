@@ -1,8 +1,8 @@
-#![forbid(unsafe_code)]
 #![warn(unused_crate_dependencies, unused_extern_crates)]
 #![warn(unreachable_pub)]
 
 use gloo_utils::format::JsValueSerdeExt;
+use js_sys::Map;
 use log::Level;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -40,8 +40,32 @@ const BUILD_INFO: BuildInfo = BuildInfo {
     dirty: env!("GIT_DIRTY"),
 };
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_name = buildInfo)]
 pub fn build_info() -> JsValue {
     console_error_panic_hook::set_once();
     <JsValue as JsValueSerdeExt>::from_serde(&BUILD_INFO).unwrap()
+}
+
+#[wasm_bindgen(typescript_custom_section)]
+const WITNESS_MAP: &'static str = r#"
+// Map from witness index to hex string value of witness.
+export type WitnessMap = Map<number, string>;
+"#;
+
+// WitnessMap
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(extends = Map, js_name = "WitnessMap", typescript_type = "WitnessMap")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type JsWitnessMap;
+
+    #[wasm_bindgen(constructor, js_class = "Map")]
+    pub fn new() -> JsWitnessMap;
+
+}
+
+impl Default for JsWitnessMap {
+    fn default() -> Self {
+        Self::new()
+    }
 }
