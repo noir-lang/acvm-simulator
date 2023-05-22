@@ -16,10 +16,7 @@ use std::collections::BTreeMap;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 use crate::{
-    js_transforms::{
-        field_element_to_js_string, js_map_to_witness_map, js_value_to_field_element,
-        witness_map_to_js_map,
-    },
+    js_transforms::{field_element_to_js_string, js_value_to_field_element},
     JsWitnessMap,
 };
 
@@ -64,7 +61,7 @@ pub async fn execute_circuit(
 ) -> Result<JsWitnessMap, JsValue> {
     console_error_panic_hook::set_once();
     let circuit: Circuit = Circuit::read(&*circuit).expect("Failed to deserialize circuit");
-    let mut witness_map = js_map_to_witness_map(initial_witness);
+    let mut witness_map: BTreeMap<Witness, FieldElement> = initial_witness.into();
 
     let mut blocks = Blocks::default();
     let mut opcodes = circuit.opcodes;
@@ -105,7 +102,7 @@ pub async fn execute_circuit(
         }
     }
 
-    Ok(witness_map_to_js_map(witness_map))
+    Ok(witness_map.into())
 }
 
 fn insert_value(
