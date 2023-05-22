@@ -1,5 +1,11 @@
 import { expect, test } from "@jest/globals";
-import { abiEncode, abiDecode, executeCircuit, WitnessMap } from "../../pkg/";
+import {
+  abiEncode,
+  abiDecode,
+  executeCircuit,
+  WitnessMap,
+  OracleCallback,
+} from "../../pkg/";
 
 test("successfully executes circuit and extracts return value", async () => {
   // Noir program which enforces that x != y and returns x + y.
@@ -131,18 +137,22 @@ test("successfully processes oracle opcodes", async () => {
     "0x0000000000000000000000000000000000000000000000000000000000000001"
   );
 
+  const oracleCallback: OracleCallback = async (
+    _name: string,
+    _inputs: string[]
+  ) => {
+    // We cannot use jest matchers here (or write to a variable in the outside scope) so cannot test that
+    // the values for `name` and `inputs` are correct, we can `console.log` them however.
+    // console.log(name)
+    // console.log(inputs)
+
+    // Witness(1) + Witness(2) = 1 + 1 = 2
+    return ["0x02"];
+  };
   const solved_witness: WitnessMap = await executeCircuit(
     oracle_bytecode,
     initial_witness,
-    async (_name: string, _inputs: string[]) => {
-      // We cannot use jest matchers here (or write to a variable in the outside scope) so cannot test that
-      // the values for `name` and `inputs` are correct, we can `console.log` them however.
-      // console.log(name)
-      // console.log(inputs)
-
-      // Witness(1) + Witness(2) = 1 + 1 = 2
-      return ["0x02"];
-    }
+    oracleCallback
   );
 
   // If incorrect value is written into circuit then execution should halt due to unsatisfied constraint in
