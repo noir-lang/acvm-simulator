@@ -3,6 +3,8 @@ use js_sys::JsString;
 use std::collections::BTreeMap;
 use wasm_bindgen::JsValue;
 
+use crate::JsWitnessMap;
+
 pub(crate) fn js_value_to_field_element(js_value: JsValue) -> Result<FieldElement, JsString> {
     let hex_str = js_value.as_string().ok_or("failed to parse field element from non-string")?;
 
@@ -18,7 +20,7 @@ pub(crate) fn field_element_to_js_string(field_element: &FieldElement) -> JsStri
     format!("0x{}", field_element.to_hex()).into()
 }
 
-pub(crate) fn js_map_to_witness_map(js_map: js_sys::Map) -> BTreeMap<Witness, FieldElement> {
+pub(crate) fn js_map_to_witness_map(js_map: JsWitnessMap) -> BTreeMap<Witness, FieldElement> {
     let mut witness_map: BTreeMap<Witness, FieldElement> = BTreeMap::new();
     js_map.for_each(&mut |value, key| {
         let witness_index = Witness(key.as_f64().unwrap() as u32);
@@ -28,8 +30,8 @@ pub(crate) fn js_map_to_witness_map(js_map: js_sys::Map) -> BTreeMap<Witness, Fi
     witness_map
 }
 
-pub(crate) fn witness_map_to_js_map(witness_map: BTreeMap<Witness, FieldElement>) -> js_sys::Map {
-    let js_map = js_sys::Map::new();
+pub(crate) fn witness_map_to_js_map(witness_map: BTreeMap<Witness, FieldElement>) -> JsWitnessMap {
+    let js_map = JsWitnessMap::new();
     for (key, value) in witness_map {
         js_map.set(&js_sys::Number::from(key.witness_index()), &field_element_to_js_string(&value));
     }

@@ -15,9 +15,12 @@ use std::collections::BTreeMap;
 
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
-use crate::js_transforms::{
-    field_element_to_js_string, js_map_to_witness_map, js_value_to_field_element,
-    witness_map_to_js_map,
+use crate::{
+    js_transforms::{
+        field_element_to_js_string, js_map_to_witness_map, js_value_to_field_element,
+        witness_map_to_js_map,
+    },
+    JsWitnessMap,
 };
 
 struct SimulatedBackend;
@@ -56,9 +59,9 @@ impl PartialWitnessGenerator for SimulatedBackend {
 #[wasm_bindgen(js_name = executeCircuit)]
 pub async fn execute_circuit(
     circuit: Vec<u8>,
-    initial_witness: js_sys::Map,
+    initial_witness: JsWitnessMap,
     oracle_resolver: js_sys::Function,
-) -> Result<js_sys::Map, JsValue> {
+) -> Result<JsWitnessMap, JsValue> {
     console_error_panic_hook::set_once();
     let circuit: Circuit = Circuit::read(&*circuit).expect("Failed to deserialize circuit");
     let mut witness_map = js_map_to_witness_map(initial_witness);
