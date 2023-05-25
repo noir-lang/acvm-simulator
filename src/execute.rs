@@ -42,12 +42,17 @@ impl PartialWitnessGenerator for SimulatedBackend {
                 hash::hash_to_field_128_security(initial_witness, func_call)
             }
             BlackBoxFunc::Keccak256 => hash::keccak256(initial_witness, func_call),
-            BlackBoxFunc::AES
-            | BlackBoxFunc::Pedersen
-            | BlackBoxFunc::ComputeMerkleRoot
-            | BlackBoxFunc::FixedBaseScalarMul
-            | BlackBoxFunc::SchnorrVerify => {
-                unimplemented!("opcode does not have a rust implementation")
+            BlackBoxFunc::Pedersen => {
+                unimplemented!("Pedersen opcode does not have a rust implementation")
+            }
+            BlackBoxFunc::FixedBaseScalarMul => {
+                unimplemented!("FixedBaseScalarMul opcode does not have a rust implementation")
+            }
+            BlackBoxFunc::SchnorrVerify => {
+                unimplemented!("SchnorrVerify opcode does not have a rust implementation")
+            }
+            BlackBoxFunc::AES | BlackBoxFunc::ComputeMerkleRoot => {
+                unimplemented!("opcode has been removed from ACIR")
             }
         }
     }
