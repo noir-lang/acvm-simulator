@@ -139,11 +139,11 @@
         ];
 
         buildPhaseCargoCommand = ''
-          ./buildPhaseCargoCommand.sh
+          bash ./buildPhaseCargoCommand.sh
         '';
 
         installPhase = ''
-          ./installPhase.sh        
+          bash ./installPhase.sh        
         '';
 
       });
