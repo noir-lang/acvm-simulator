@@ -1,5 +1,5 @@
 {
-  description = "An ACVM backend which allows proving/verifying ACIR circuits against Aztec Lab's Barretenberg library.";
+  description = "ACVM Simulator";
 
   inputs = {
     nixpkgs = {
@@ -62,7 +62,7 @@
           ++ pkgs.lib.optional (pkgs.hostPlatform.isAarch64 && pkgs.hostPlatform.isDarwin) "aarch64-apple-darwin";
       };
 
-      craneLibWasm = (crane.mkLib pkgs).overrideToolchain rustToolchain;
+      craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
       sharedEnvironment = {
         # Barretenberg fails if tests are run on multiple threads, so we set the test thread
@@ -116,9 +116,9 @@
       };
     in
     rec {
-      packages.default = craneLibWasm.mkCargoDerivation (wasmArgs // rec {
+      packages.default = craneLib.mkCargoDerivation (wasmArgs // rec {
         pname = "acvm-simulator-wasm";
-        version = "1.0.0";
+        # version = "1.0.0";
 
         inherit cargoArtifacts;
         inherit GIT_COMMIT;
@@ -134,7 +134,7 @@
           which
           git
           jq
-          rustToolchainWasm
+          rustToolchain
           wasm-bindgen-cli
           wasm-pack
         ];
@@ -144,13 +144,22 @@
           wasm-bindgen ./target/wasm32-unknown-unknown/release/acvm_simulator.wasm --out-dir ./pkg/nodejs --typescript --target nodejs
           wasm-bindgen ./target/wasm32-unknown-unknown/release/acvm_simulator.wasm --out-dir ./pkg/browser --typescript --target web
           wasm-opt ./pkg/nodejs/acvm_simulator_bg.wasm -o ./pkg/nodejs/acvm_simulator_bg.wasm -O
-          wasm-opt ./pkg/browser/acvm_simulator_bg.wasm -o ./pkg/browser/acvm_simulator_bg.wasm -O
+          wasm-opt ./pkg/web/acvm_simulator_bg.wasm -o ./pkg/web/acvm_simulator_bg.wasm -O
           ls ./pkg/ -R -lah
         '';
 
         installPhase = ''
           mkdir -p $out
+          cp README.md $out
           cp -r ./pkg/* $out/
+          cat package.json \
+          | jq '{ name, version, collaborators, license } 
+            | .repository = {"type": "git","url": "https://github.com/noir-lang/acvm-simulator-wasm.git"} 
+            | .sideEffects = false | .files = ["nodejs","web","package.json"] 
+            | .main = "./nodejs/acvm_simulator.js" 
+            | .types = "./web/acvm_simulator.d.ts" 
+            | .module = "./web/acvm_simulator.js"' \
+          > $out/package.json
         '';
 
       });
@@ -167,7 +176,7 @@
           which
           git
           jq
-          rustToolchainWasm
+          rustToolchain
           wasm-bindgen-cli
           wasm-pack
         ];
