@@ -136,29 +136,14 @@
           jq
           rustToolchain
           wasm-bindgen-cli
-          wasm-pack
         ];
 
         buildPhaseCargoCommand = ''
-          cargo build --lib --release --target wasm32-unknown-unknown
-          wasm-bindgen ./target/wasm32-unknown-unknown/release/acvm_simulator.wasm --out-dir ./pkg/nodejs --typescript --target nodejs
-          wasm-bindgen ./target/wasm32-unknown-unknown/release/acvm_simulator.wasm --out-dir ./pkg/web --typescript --target web
-          wasm-opt ./pkg/nodejs/acvm_simulator_bg.wasm -o ./pkg/nodejs/acvm_simulator_bg.wasm -O
-          wasm-opt ./pkg/web/acvm_simulator_bg.wasm -o ./pkg/web/acvm_simulator_bg.wasm -O
+          ./buildPhaseCargoCommand.sh
         '';
 
         installPhase = ''
-          mkdir -p $out
-          cp README.md $out/
-          cp -r ./pkg/* $out/
-          cat package.json \
-          | jq '{ name, version, collaborators, license } 
-            | .repository = {"type": "git","url": "https://github.com/noir-lang/acvm-simulator-wasm.git"} 
-            | .sideEffects = false | .files = ["nodejs","web","package.json"] 
-            | .main = "./nodejs/acvm_simulator.js" 
-            | .types = "./web/acvm_simulator.d.ts" 
-            | .module = "./web/acvm_simulator.js"' \
-          > $out/package.json
+          ./installPhase.sh        
         '';
 
       });
@@ -177,7 +162,6 @@
           jq
           rustToolchain
           wasm-bindgen-cli
-          wasm-pack
         ];
 
         shellHook = ''
