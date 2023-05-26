@@ -25,7 +25,7 @@ jobs:
         run: cargo install wasm-pack
 
       - name: Build wasm crate
-        run: ./build-wasm
+        run: ./build.sh
 
       - name: Set up test environment
         uses: ./.github/actions/setup
