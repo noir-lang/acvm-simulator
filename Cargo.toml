@@ -1,7 +1,10 @@
 [package]
 name = "acvm-simulator"
+description = "Typescript wrapper around the ACVM allowing execution of ACIR code"
 version = "0.0.0" # x-release-please-version
 authors = ["The Noir Team <team@noir-lang.org>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/noir-lang/acvm-simulator"
 edition = "2021"
 rust-version = "1.66"
 
