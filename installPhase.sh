@@ -16,7 +16,7 @@ else
 fi
 
 # Extract version from Cargo.toml
-PACKAGE_VERSION=$(grep '^version =' Cargo.toml | sed -E 's/version = "(.*)"$/\1/')
+PACKAGE_VERSION=$(grep '^version =' Cargo.toml | sed -E 's/version = "(.*)" # x-release-please-version$/\1/')
 if [ -z "$PACKAGE_VERSION" ]; then
     echo "Could not extract version from Cargo.toml"
     exit 1
