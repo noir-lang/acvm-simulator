@@ -5,9 +5,10 @@ use acvm::{
             Circuit,
         },
         native_types::{Witness, WitnessMap},
+        BlackBoxFunc,
     },
     pwg::{
-        block::Blocks, hash, logic, range, signature, OpcodeResolution,
+        block::Blocks, hash, logic, range, signature, witness_to_value, OpcodeResolution,
         PartialWitnessGeneratorStatus,
     },
     FieldElement, OpcodeResolutionError, PartialWitnessGenerator,
@@ -19,6 +20,39 @@ use crate::{
     js_transforms::{field_element_to_js_string, js_value_to_field_element},
     JsWitnessMap,
 };
+
+fn pedersen(_inputs: &[FieldElement]) -> (FieldElement, FieldElement) {
+    todo!("pedersen is unimplemented");
+}
+
+fn fixed_base_scalar_mul(_input: &FieldElement) -> (FieldElement, FieldElement) {
+    todo!("fixed_base_scalar_mul is unimplemented");
+}
+
+fn schnorr_verify(_pub_key: [u8; 64], _sig_s: [u8; 32], _sig_e: [u8; 32], _message: &[u8]) -> bool {
+    todo!("schnorr_verify is unimplemented");
+}
+
+// Don't worry too much about this one. This opcode is being removed in ACVM 0.13.0
+fn compute_merkle_root(
+    hash_func: impl Fn(&FieldElement, &FieldElement) -> FieldElement,
+    hash_path: Vec<&FieldElement>,
+    index: &FieldElement,
+    leaf: &FieldElement,
+) -> FieldElement {
+    let mut index_bits: Vec<bool> = index.bits();
+    index_bits.reverse();
+
+    assert!(hash_path.len() <= index_bits.len(), "hash path exceeds max depth of tree");
+    index_bits.into_iter().zip(hash_path.into_iter()).fold(
+        *leaf,
+        |current_node, (path_bit, path_elem)| {
+            let (left, right) =
+                if !path_bit { (&current_node, path_elem) } else { (path_elem, &current_node) };
+            hash_func(left, right)
+        },
+    )
+}
 
 #[derive(Default)]
 struct SimulatedBackend;
@@ -118,43 +152,124 @@ impl PartialWitnessGenerator for SimulatedBackend {
 
     fn compute_merkle_root(
         &self,
-        _initial_witness: &mut WitnessMap,
-        _leaf: &FunctionInput,
-        _index: &FunctionInput,
-        _hash_path: &[FunctionInput],
-        _output: &Witness,
+        initial_witness: &mut WitnessMap,
+        leaf: &FunctionInput,
+        index: &FunctionInput,
+        hash_path: &[FunctionInput],
+        output: &Witness,
     ) -> Result<OpcodeResolution, OpcodeResolutionError> {
-        todo!("opcode does not have a rust implementation")
+        let leaf = witness_to_value(initial_witness, leaf.witness)?;
+
+        let index = witness_to_value(initial_witness, index.witness)?;
+
+        let hash_path: Result<Vec<_>, _> = hash_path
+            .iter()
+            .map(|input| witness_to_value(initial_witness, input.witness))
+            .collect();
+
+        let computed_merkle_root = compute_merkle_root(
+            |left, right| pedersen(&[*left, *right]).0,
+            hash_path?,
+            index,
+            leaf,
+        );
+
+        initial_witness.insert(*output, computed_merkle_root);
+        Ok(OpcodeResolution::Solved)
     }
 
     fn schnorr_verify(
         &self,
-        _initial_witness: &mut WitnessMap,
-        _public_key_x: &FunctionInput,
-        _public_key_y: &FunctionInput,
-        _signature: &[FunctionInput],
-        _message: &[FunctionInput],
-        _output: &Witness,
+        initial_witness: &mut WitnessMap,
+        public_key_x: &FunctionInput,
+        public_key_y: &FunctionInput,
+        signature: &[FunctionInput],
+        message: &[FunctionInput],
+        output: &Witness,
     ) -> Result<OpcodeResolution, OpcodeResolutionError> {
-        todo!("opcode does not have a rust implementation")
+        let pub_key_x = witness_to_value(initial_witness, public_key_x.witness)?.to_be_bytes();
+        let pub_key_y = witness_to_value(initial_witness, public_key_y.witness)?.to_be_bytes();
+
+        let pub_key_bytes: Vec<u8> = pub_key_x.iter().copied().chain(pub_key_y.to_vec()).collect();
+        let pub_key: [u8; 64] = pub_key_bytes.try_into().map_err(|v: Vec<u8>| {
+            OpcodeResolutionError::BlackBoxFunctionFailed(
+                BlackBoxFunc::SchnorrVerify,
+                format!("expected pubkey size {} but received {}", 64, v.len()),
+            )
+        })?;
+
+        let mut signature = signature.iter();
+        let mut sig_s = [0u8; 32];
+        for (i, sig) in sig_s.iter_mut().enumerate() {
+            let _sig_i = signature.next().ok_or_else(|| {
+                OpcodeResolutionError::BlackBoxFunctionFailed(
+                    BlackBoxFunc::SchnorrVerify,
+                    format!("sig_s should be 32 bytes long, found only {i} bytes"),
+                )
+            })?;
+            let sig_i = witness_to_value(initial_witness, _sig_i.witness)?;
+            *sig = *sig_i.to_be_bytes().last().unwrap();
+        }
+        let mut sig_e = [0u8; 32];
+        for (i, sig) in sig_e.iter_mut().enumerate() {
+            let _sig_i = signature.next().ok_or_else(|| {
+                OpcodeResolutionError::BlackBoxFunctionFailed(
+                    BlackBoxFunc::SchnorrVerify,
+                    format!("sig_e should be 32 bytes long, found only {i} bytes"),
+                )
+            })?;
+            let sig_i = witness_to_value(initial_witness, _sig_i.witness)?;
+            *sig = *sig_i.to_be_bytes().last().unwrap();
+        }
+
+        let mut message_bytes = Vec::new();
+        for msg in message.iter() {
+            let msg_i_field = witness_to_value(initial_witness, msg.witness)?;
+            let msg_i = *msg_i_field.to_be_bytes().last().ok_or_else(|| {
+                OpcodeResolutionError::BlackBoxFunctionFailed(
+                    BlackBoxFunc::SchnorrVerify,
+                    "could not get last bytes".into(),
+                )
+            })?;
+            message_bytes.push(msg_i);
+        }
+
+        let valid_signature = schnorr_verify(pub_key, sig_s, sig_e, &message_bytes);
+
+        initial_witness.insert(*output, FieldElement::from(valid_signature));
+        Ok(OpcodeResolution::Solved)
     }
 
     fn pedersen(
         &self,
-        _initial_witness: &mut WitnessMap,
-        _inputs: &[FunctionInput],
-        _outputs: &[Witness],
+        initial_witness: &mut WitnessMap,
+        inputs: &[FunctionInput],
+        outputs: &[Witness],
     ) -> Result<OpcodeResolution, OpcodeResolutionError> {
-        todo!("opcode does not have a rust implementation")
+        let scalars: Result<Vec<_>, _> =
+            inputs.iter().map(|input| witness_to_value(initial_witness, input.witness)).collect();
+        let scalars: Vec<_> = scalars?.into_iter().cloned().collect();
+
+        let (res_x, res_y) = pedersen(&scalars);
+
+        initial_witness.insert(outputs[0], res_x);
+        initial_witness.insert(outputs[1], res_y);
+        Ok(OpcodeResolution::Solved)
     }
 
     fn fixed_base_scalar_mul(
         &self,
-        _initial_witness: &mut WitnessMap,
-        _input: &FunctionInput,
-        _outputs: &[Witness],
+        initial_witness: &mut WitnessMap,
+        input: &FunctionInput,
+        outputs: &[Witness],
     ) -> Result<OpcodeResolution, OpcodeResolutionError> {
-        todo!("opcode does not have a rust implementation")
+        let scalar = witness_to_value(initial_witness, input.witness)?;
+
+        let (pub_x, pub_y) = fixed_base_scalar_mul(scalar);
+
+        initial_witness.insert(outputs[0], pub_x);
+        initial_witness.insert(outputs[1], pub_y);
+        Ok(OpcodeResolution::Solved)
     }
 }
 
