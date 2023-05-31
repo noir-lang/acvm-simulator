@@ -139,11 +139,21 @@
         ];
 
         buildPhaseCargoCommand = ''
+          echo "===================="
+          echo "buildPhaseCargoCommand"
           bash ./buildPhaseCargoCommand.sh
+          echo "////////////////////"
+          ls -la
+          echo "===================="
         '';
 
         installPhase = ''
+          echo "===================="
+          echo "installPhase"
           bash ./installPhase.sh        
+          echo "////////////////////"
+          ls -la
+          echo "===================="
         '';
 
       });
