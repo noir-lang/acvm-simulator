@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - master
+      - jb-nix-flake
 
 jobs:
   release-please:
@@ -64,6 +64,6 @@ jobs:
         with:
           workflow: update.yml
           repo: noir-lang/acvm-simulator-wasm
-          ref: master
+          ref: jb-nix-flake
           token: ${{ secrets.ACVM_SIMULATOR_RELEASES_TOKEN }}
           inputs: '{ "acvm-simulator-ref": "${{ needs.release-please.outputs.tag-name }}" }'
