@@ -15,8 +15,8 @@ else
     VERSION_APPENDIX="-NOGIT"
 fi
 
-# Extract version from Cargo.toml
-PACKAGE_VERSION=$(grep '^version =' Cargo.toml | sed -E 's/version = "(.*)" # x-release-please-version$/\1/')
+# Extract version from Cargo.toml using toml2json
+PACKAGE_VERSION=$(toml2json < Cargo.toml | jq -r .package.version)
 if [ -z "$PACKAGE_VERSION" ]; then
     echo "Could not extract version from Cargo.toml"
     exit 1
@@ -27,7 +27,7 @@ mkdir -p $out
 cp README.md $out/
 cp -r ./pkg/* $out/
 cat package.json \
-| jq --arg ver "$PACKAGE_VERSION" '{ name, version: $ver, collaborators, license } 
+| jq --arg ver "$PACKAGE_VERSION" '.version = $ver 
 | .repository = {"type": "git","url": "https://github.com/noir-lang/acvm-simulator-wasm.git"} 
 | .sideEffects = false | .files = ["nodejs","web","package.json"] 
 | .main = "./nodejs/acvm_simulator.js" 
