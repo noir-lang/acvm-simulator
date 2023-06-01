@@ -127,7 +127,7 @@
         COMMIT_SHORT = builtins.substring 0 7 GIT_COMMIT;
         VERSION_APPENDIX = if GIT_DIRTY == "true" then "-dirty" else "";
 
-        src = ./.; #craneLib.cleanCargoSource (craneLib.path ./.);
+        src = ./.;
 
         nativeBuildInputs = with pkgs; [
           binaryen
@@ -136,14 +136,15 @@
           jq
           rustToolchain
           wasm-bindgen-cli
+          toml2json
         ];
 
         buildPhaseCargoCommand = ''
-          ./buildPhaseCargoCommand.sh
+          bash ./buildPhaseCargoCommand.sh
         '';
 
         installPhase = ''
-          ./installPhase.sh        
+          bash ./installPhase.sh
         '';
 
       });
