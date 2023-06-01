@@ -56,8 +56,8 @@ jobs:
 
   dispatch-acvm-simulator-wasm:
     name: Dispatch to acvm-simulator-wasm
-    needs: [release-please]
-    if: ${{ needs.release-please.outputs.tag-name }}
+    # needs: [release-please]
+    # if: ${{ needs.release-please.outputs.tag-name }}
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch to acvm-simulator-wasm
