@@ -15,6 +15,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 acvm = "0.12.0"
+# acvm-backend-barretenberg = { git = "https://github.com/noir-lang/acvm-backend-barretenberg", branch = "phated/wasmer3-testing", default-features = false, features = ["wasm"]}
 iter-extended = { git = "https://github.com/noir-lang/noir", rev = "b938c7eeaa5ee493b28cad5451e7d5b7921ad934"}
 noirc_abi = { git = "https://github.com/noir-lang/noir", rev = "b938c7eeaa5ee493b28cad5451e7d5b7921ad934"}
 wasm-bindgen = { version = "0.2.86", features = ["serde-serialize"] }

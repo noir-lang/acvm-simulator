@@ -36,18 +36,27 @@
         rust-overlay.follows = "rust-overlay";
       };
     };
+    barretenberg = {
+      url = "github:AztecProtocol/barretenberg";
+      # All of these inputs (a.k.a. dependencies) need to align with inputs we
+      # use so they use the `inputs.*.follows` syntax to reference our inputs
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-utils.follows = "flake-utils";
+      };
+    };
 
   };
 
   outputs =
-    { self, nixpkgs, crane, flake-utils, rust-overlay, ... }: #, barretenberg
+    { self, nixpkgs, crane, flake-utils, rust-overlay, barretenberg, ... }: #, barretenberg
     flake-utils.lib.eachDefaultSystem (system:
     let
       pkgs = import nixpkgs {
         inherit system;
         overlays = [
           rust-overlay.overlays.default
-          # barretenberg.overlays.default
+          barretenberg.overlays.default
         ];
       };
 
@@ -71,6 +80,7 @@
         # Note: Setting this allows for consistent behavior across build and shells, but is mostly
         # hidden from the developer - i.e. when they see the command being run via `nix flake check`
         RUST_TEST_THREADS = "1";
+        BARRETENBERG_BIN_DIR = "${pkgs.barretenberg-wasm}/bin";
       };
 
       sourceFilter = path: type:
@@ -151,10 +161,11 @@
       # Setup the environment to match the stdenv from `nix build` & `nix flake check`, and
       # combine it with the environment settings, the inputs from our checks derivations,
       # and extra tooling via `nativeBuildInputs`
-      devShells.default = pkgs.mkShell ({
+      devShells.default = pkgs.mkShell (sharedEnvironment // {
         # inputsFrom = builtins.attrValues checks;
 
         nativeBuildInputs = with pkgs; [
+          starship
           nil
           nixpkgs-fmt
           which
