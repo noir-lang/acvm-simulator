@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     branches:
+      - master
       - jb-nix-flake
 
 jobs:
