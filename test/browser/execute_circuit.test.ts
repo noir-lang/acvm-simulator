@@ -82,6 +82,86 @@ test("successfully executes circuit and extracts return value", async () => {
   expect(BigInt(decoded_inputs.return_value)).toBe(3n);
 });
 
+
+test("successfully executes a pedersen hash", async () => {
+  await initACVMSimulator();
+
+  const abi = {
+    parameters: [{ name: "x", type: { kind: "field" }, visibility: "private" }],
+    param_witnesses: {
+      x: [1],
+    },
+    return_type: { kind: "array", type: { kind: "field" }, length: 2 },
+    return_witnesses: [2, 3],
+  };
+  const bytecode = Uint8Array.from([
+    0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 1,
+    0, 0, 0, 1, 5, 0, 1, 0, 0, 0, 1, 0, 0, 0, 254, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0,
+    0, 3, 0, 0, 0,
+  ]);
+
+  const inputs = {
+    x: "1",
+  };
+
+  const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
+  const solved_witness: WitnessMap = await executeCircuit(
+    bytecode,
+    initial_witness,
+    () => {
+      throw Error("unexpected opcode");
+    }
+  );
+
+  const decoded_inputs = abiDecode(abi, solved_witness);
+
+
+  const expectedResult = ["0x09489945604c9686e698cb69d7bd6fc0cdb02e9faae3e1a433f1c342c1a5ecc4", "0x24f50d25508b4dfb1e8a834e39565f646e217b24cb3a475c2e4991d1bb07a9d8"];
+
+  return expect(decoded_inputs.return_value).toEqual(expectedResult);
+});
+
+test("successfully executes a FixedBaseScalarMul opcode", async () => {
+  await initACVMSimulator();
+
+  const abi = {
+    parameters: [{ name: "x", type: { kind: "field" }, visibility: "private" }],
+    param_witnesses: {
+      x: [1],
+    },
+    return_type: { kind: "array", type: { kind: "field" }, length: 2 },
+    return_witnesses: [2, 3],
+  };
+  const bytecode = Uint8Array.from([
+    0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 1,
+    0, 0, 0, 1, 8, 0, 1, 0, 0, 0, 1, 0, 0, 0, 254, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0,
+    0, 3, 0, 0, 0,
+  ]);
+
+  const inputs = {
+    x: "1",
+  };
+
+  const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
+  const solved_witness: WitnessMap = await executeCircuit(
+    bytecode,
+    initial_witness,
+    () => {
+      throw Error("unexpected opcode");
+    }
+  );
+
+  const decoded_inputs = abiDecode(abi, solved_witness);
+
+  const expectedResult =     [
+    '0x0000000000000000000000000000000000000000000000000000000000000001',
+    '0x0000000000000002cf135e7506a45d632d270d45f1181294833fc48d823f272c'
+  ];
+
+  expect(decoded_inputs.return_value).toEqual(expectedResult);
+});
+
+
 test("successfully processes oracle opcodes", async () => {
   await initACVMSimulator();
 
@@ -172,4 +252,94 @@ test("successfully processes oracle opcodes", async () => {
   expect(solved_witness.get(3) as string).toBe(
     "0x0000000000000000000000000000000000000000000000000000000000000002"
   );
+});
+
+test("successfully executes a SchnorrVerify opcode", async () => {
+  await initACVMSimulator();
+
+  const abi = {
+    parameters: [
+      { name: "x", type: { kind: "field" }, visibility: "private" },
+      { name: "y", type: { kind: "field" }, visibility: "private" },
+      {
+        name: "sig",
+        type: {
+          kind: "array",
+          type: { kind: "integer", width: 8, sign: "unsigned" },
+          length: 64,
+        },
+        visibility: "private",
+      },
+      {
+        name: "msg",
+        type: {
+          kind: "array",
+          type: { kind: "integer", width: 8, sign: "unsigned" },
+          length: 10,
+        },
+        visibility: "private",
+      },
+    ],
+    param_witnesses: {
+      x: [1],
+      y: [2],
+      sig: Array.from({ length: 64 }, (_, i) => 3 + i),
+      msg: Array.from({ length: 10 }, (_, i) => 3 + 64 + i),
+    },
+    return_type: { kind: "boolean" },
+    return_witnesses: [3 + 10 + 64],
+  };
+  const bytecode = Uint8Array.from([
+    0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 77, 0, 0, 0, 1, 0, 0, 0,
+    1, 3, 0, 76, 0, 0, 0, 1, 0, 0, 0, 254, 0, 0, 0, 2, 0, 0, 0, 254, 0, 0, 0, 3,
+    0, 0, 0, 8, 0, 0, 0, 4, 0, 0, 0, 8, 0, 0, 0, 5, 0, 0, 0, 8, 0, 0, 0, 6, 0,
+    0, 0, 8, 0, 0, 0, 7, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0, 9, 0, 0,
+    0, 8, 0, 0, 0, 10, 0, 0, 0, 8, 0, 0, 0, 11, 0, 0, 0, 8, 0, 0, 0, 12, 0, 0,
+    0, 8, 0, 0, 0, 13, 0, 0, 0, 8, 0, 0, 0, 14, 0, 0, 0, 8, 0, 0, 0, 15, 0, 0,
+    0, 8, 0, 0, 0, 16, 0, 0, 0, 8, 0, 0, 0, 17, 0, 0, 0, 8, 0, 0, 0, 18, 0, 0,
+    0, 8, 0, 0, 0, 19, 0, 0, 0, 8, 0, 0, 0, 20, 0, 0, 0, 8, 0, 0, 0, 21, 0, 0,
+    0, 8, 0, 0, 0, 22, 0, 0, 0, 8, 0, 0, 0, 23, 0, 0, 0, 8, 0, 0, 0, 24, 0, 0,
+    0, 8, 0, 0, 0, 25, 0, 0, 0, 8, 0, 0, 0, 26, 0, 0, 0, 8, 0, 0, 0, 27, 0, 0,
+    0, 8, 0, 0, 0, 28, 0, 0, 0, 8, 0, 0, 0, 29, 0, 0, 0, 8, 0, 0, 0, 30, 0, 0,
+    0, 8, 0, 0, 0, 31, 0, 0, 0, 8, 0, 0, 0, 32, 0, 0, 0, 8, 0, 0, 0, 33, 0, 0,
+    0, 8, 0, 0, 0, 34, 0, 0, 0, 8, 0, 0, 0, 35, 0, 0, 0, 8, 0, 0, 0, 36, 0, 0,
+    0, 8, 0, 0, 0, 37, 0, 0, 0, 8, 0, 0, 0, 38, 0, 0, 0, 8, 0, 0, 0, 39, 0, 0,
+    0, 8, 0, 0, 0, 40, 0, 0, 0, 8, 0, 0, 0, 41, 0, 0, 0, 8, 0, 0, 0, 42, 0, 0,
+    0, 8, 0, 0, 0, 43, 0, 0, 0, 8, 0, 0, 0, 44, 0, 0, 0, 8, 0, 0, 0, 45, 0, 0,
+    0, 8, 0, 0, 0, 46, 0, 0, 0, 8, 0, 0, 0, 47, 0, 0, 0, 8, 0, 0, 0, 48, 0, 0,
+    0, 8, 0, 0, 0, 49, 0, 0, 0, 8, 0, 0, 0, 50, 0, 0, 0, 8, 0, 0, 0, 51, 0, 0,
+    0, 8, 0, 0, 0, 52, 0, 0, 0, 8, 0, 0, 0, 53, 0, 0, 0, 8, 0, 0, 0, 54, 0, 0,
+    0, 8, 0, 0, 0, 55, 0, 0, 0, 8, 0, 0, 0, 56, 0, 0, 0, 8, 0, 0, 0, 57, 0, 0,
+    0, 8, 0, 0, 0, 58, 0, 0, 0, 8, 0, 0, 0, 59, 0, 0, 0, 8, 0, 0, 0, 60, 0, 0,
+    0, 8, 0, 0, 0, 61, 0, 0, 0, 8, 0, 0, 0, 62, 0, 0, 0, 8, 0, 0, 0, 63, 0, 0,
+    0, 8, 0, 0, 0, 64, 0, 0, 0, 8, 0, 0, 0, 65, 0, 0, 0, 8, 0, 0, 0, 66, 0, 0,
+    0, 8, 0, 0, 0, 67, 0, 0, 0, 8, 0, 0, 0, 68, 0, 0, 0, 8, 0, 0, 0, 69, 0, 0,
+    0, 8, 0, 0, 0, 70, 0, 0, 0, 8, 0, 0, 0, 71, 0, 0, 0, 8, 0, 0, 0, 72, 0, 0,
+    0, 8, 0, 0, 0, 73, 0, 0, 0, 8, 0, 0, 0, 74, 0, 0, 0, 8, 0, 0, 0, 75, 0, 0,
+    0, 8, 0, 0, 0, 76, 0, 0, 0, 8, 0, 0, 0, 1, 0, 0, 0, 77, 0, 0, 0,
+  ]);
+
+  const inputs = {
+    x: "0x17cbd3ed3151ccfd170efe1d54280a6a4822640bf5c369908ad74ea21518a9c5",
+    y: "0x0e0456e3795c1a31f20035b741cd6158929eeccd320d299cfcac962865a6bc74",
+    sig: [
+      5, 202, 31, 146, 81, 242, 246, 69, 43, 107, 249, 153, 198, 44, 14, 111,
+      191, 121, 137, 166, 160, 103, 18, 181, 243, 233, 226, 95, 67, 16, 37, 128,
+      85, 76, 19, 253, 30, 77, 192, 53, 138, 205, 69, 33, 236, 163, 83, 194, 84,
+      137, 184, 221, 176, 121, 179, 27, 63, 70, 54, 16, 176, 250, 39, 239,
+    ],
+    msg: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  };
+
+  const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
+  const solved_witness: WitnessMap = await executeCircuit(
+    bytecode,
+    initial_witness,
+    () => {
+      throw Error("unexpected opcode");
+    }
+  );
+
+  const decoded_inputs = abiDecode(abi, solved_witness);
+  expect(BigInt(decoded_inputs.return_value).toString()).toBe(1n.toString());
 });

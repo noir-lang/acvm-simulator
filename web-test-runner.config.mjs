@@ -8,6 +8,12 @@ export default {
       ts: true,
     }),
   ],
+	testFramework: {
+		config: {
+			ui: 'bdd',
+			timeout: '40000',
+		}
+	},
   testRunnerHtml: (testFramework) => `
   <html>
     <head>
