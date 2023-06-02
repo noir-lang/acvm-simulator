@@ -1,7 +1,6 @@
 use acvm::FieldElement;
 
-use super::{Error};
-use crate::barretenberg::Barretenberg;
+use super::{Barretenberg, Error};
 
 pub(crate) trait Pedersen {
     fn compress_native(
@@ -20,7 +19,7 @@ impl Pedersen for Barretenberg {
         left: &FieldElement,
         right: &FieldElement,
     ) -> Result<FieldElement, Error> {
-        use crate::barretenberg::FIELD_BYTES;
+        use super::FIELD_BYTES;
 
         let lhs_ptr: usize = 0;
         let rhs_ptr: usize = lhs_ptr + FIELD_BYTES;
@@ -40,34 +39,28 @@ impl Pedersen for Barretenberg {
 
     #[allow(dead_code)]
     fn compress_many(&self, inputs: Vec<FieldElement>) -> Result<FieldElement, Error> {
-        use crate::barretenberg::FIELD_BYTES;
+        use super::FIELD_BYTES;
         use crate::barretenberg_structures::Assignments;
 
         let input_buf = Assignments::from(inputs).to_bytes();
         let input_ptr = self.allocate(&input_buf)?;
         let result_ptr: usize = 0;
 
-        self.call_multiple(
-            "pedersen_plookup_compress",
-            vec![&input_ptr, &result_ptr.into()],
-        )?;
+        self.call_multiple("pedersen_plookup_compress", vec![&input_ptr, &result_ptr.into()])?;
 
         let result_bytes: [u8; FIELD_BYTES] = self.read_memory(result_ptr);
         Ok(FieldElement::from_be_bytes_reduce(&result_bytes))
     }
 
     fn encrypt(&self, inputs: Vec<FieldElement>) -> Result<(FieldElement, FieldElement), Error> {
-        use crate::barretenberg::FIELD_BYTES;
+        use super::FIELD_BYTES;
         use crate::barretenberg_structures::Assignments;
 
         let input_buf = Assignments::from(inputs).to_bytes();
         let input_ptr = self.allocate(&input_buf)?;
         let result_ptr: usize = 0;
 
-        self.call_multiple(
-            "pedersen_plookup_commit",
-            vec![&input_ptr, &result_ptr.into()],
-        )?;
+        self.call_multiple("pedersen_plookup_commit", vec![&input_ptr, &result_ptr.into()])?;
 
         let result_bytes: [u8; 2 * FIELD_BYTES] = self.read_memory(result_ptr);
         let (point_x_bytes, point_y_bytes) = result_bytes.split_at(FIELD_BYTES);
@@ -119,6 +112,14 @@ fn basic_interop() -> Result<(), Error> {
     Ok(())
 }
 
+// #[cfg(test)]
+// mod test {
+//     #[cfg(target_arch = "wasm32")]
+//     use wasm_bindgen_test::wasm_bindgen_test as test;
+
+//     #[cfg(target_arch = "wasm32")]
+//     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
 #[test]
 fn pedersen_hash_to_point() -> Result<(), Error> {
     let barretenberg = Barretenberg::new();
@@ -136,3 +137,4 @@ fn pedersen_hash_to_point() -> Result<(), Error> {
     assert_eq!(expected_y.to_hex(), y.to_hex());
     Ok(())
 }
+// }

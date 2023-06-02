@@ -79,6 +79,10 @@
         # Note: Setting this allows for consistent behavior across build and shells, but is mostly
         # hidden from the developer - i.e. when they see the command being run via `nix flake check`
         RUST_TEST_THREADS = "1";
+      };
+
+      wasmEnvironment = sharedEnvironment // {
+        # We set the environment variable because barretenberg must be compiled in a special way for wasm
         BARRETENBERG_BIN_DIR = "${pkgs.barretenberg-wasm}/bin";
       };
 
@@ -106,7 +110,10 @@
       };
 
       # Combine the environment and other configuration needed for crane to build with the wasm feature
-      wasmArgs = commonArgs // {
+      wasmArgs = wasmEnvironment // commonArgs // {
+        
+        cargoExtraArgs = "--target=wasm32-unknown-unknown";
+
         buildInputs = [ ];
 
       };
@@ -160,7 +167,7 @@
       # Setup the environment to match the stdenv from `nix build` & `nix flake check`, and
       # combine it with the environment settings, the inputs from our checks derivations,
       # and extra tooling via `nativeBuildInputs`
-      devShells.default = pkgs.mkShell (sharedEnvironment // {
+      devShells.default = pkgs.mkShell (wasmEnvironment // {
         # inputsFrom = builtins.attrValues checks;
 
         nativeBuildInputs = with pkgs; [
@@ -172,6 +179,8 @@
           jq
           rustToolchain
           wasm-bindgen-cli
+          nodejs
+          yarn
         ];
 
         shellHook = ''

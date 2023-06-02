@@ -53,6 +53,7 @@ name = "acvm-simulator"
 version = "0.0.0"
 dependencies = [
  "acvm",
+ "blake2",
  "build-data",
  "console_error_panic_hook",
  "getrandom",

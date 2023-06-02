@@ -216,7 +216,9 @@ test("successfully executes a pedersen hash", async () => {
 
   const decoded_inputs = abiDecode(abi, solved_witness);
 
-  expect(BigInt(decoded_inputs.return_value)).toBe(3n);
+  const expectedResult = ["0x09489945604c9686e698cb69d7bd6fc0cdb02e9faae3e1a433f1c342c1a5ecc4", "0x24f50d25508b4dfb1e8a834e39565f646e217b24cb3a475c2e4991d1bb07a9d8"];
+
+  expect(decoded_inputs.return_value).toEqual(expectedResult);
 });
 
 test("successfully executes a FixedBaseScalarMul opcode", async () => {
@@ -264,10 +266,17 @@ test("successfully executes a FixedBaseScalarMul opcode", async () => {
 
   const decoded_inputs = abiDecode(abi, solved_witness);
 
-  expect(BigInt(decoded_inputs.return_value)).toBe(3n);
+  const expectedResult =     [
+    '0x0000000000000000000000000000000000000000000000000000000000000001',
+    '0x0000000000000002cf135e7506a45d632d270d45f1181294833fc48d823f272c'
+  ];
+
+  console.log(decoded_inputs.return_value);
+
+  expect(decoded_inputs.return_value).toEqual(expectedResult);
 });
 
-test.only("successfully executes a SchnorrVerify opcode", async () => {
+test("successfully executes a SchnorrVerify opcode", async () => {
   // let pub_x = FunctionInput { witness: Witness(1), num_bits: FieldElement::max_num_bits() };
   // let pub_y = FunctionInput { witness: Witness(2), num_bits: FieldElement::max_num_bits() };
   // let signature_inputs =
@@ -375,6 +384,6 @@ test.only("successfully executes a SchnorrVerify opcode", async () => {
   );
 
   const decoded_inputs = abiDecode(abi, solved_witness);
-
-  expect(BigInt(decoded_inputs.return_value)).toBe(3n);
+  console.log(decoded_inputs);
+  expect(BigInt(decoded_inputs.return_value).toString()).toBe(1n.toString());
 });
