@@ -30,10 +30,7 @@ impl ScalarMul for Barretenberg {
         let result_ptr: usize = lhs_ptr + FIELD_BYTES;
         self.transfer_to_heap(&input.to_be_bytes(), lhs_ptr);
 
-        self.call_multiple(
-            "compute_public_key",
-            vec![&lhs_ptr.into(), &result_ptr.into()],
-        )?;
+        self.call_multiple("compute_public_key", vec![&lhs_ptr.into(), &result_ptr.into()])?;
 
         let result_bytes: [u8; 2 * FIELD_BYTES] = self.read_memory(result_ptr);
         let (pubkey_x_bytes, pubkey_y_bytes) = result_bytes.split_at(FIELD_BYTES);

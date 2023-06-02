@@ -13,23 +13,22 @@ compile_error!("feature \"native\" cannot be enabled for a \"wasm32\" target");
 #[cfg(all(feature = "wasm", target_arch = "wasm32"))]
 compile_error!("feature \"wasm\" cannot be enabled for a \"wasm32\" target");
 
-use thiserror::Error;
 use gloo_utils::format::JsValueSerdeExt;
 use js_sys::Map;
 use log::Level;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+use thiserror::Error;
 use wasm_bindgen::prelude::*;
 
 mod abi;
+mod barretenberg_structures;
 mod execute;
 mod js_transforms;
-mod barretenberg_structures;
-// mod barretenberg;
-mod pedersen;
-mod schnorr;
-mod scalar_mul;
 mod merkle;
+mod pedersen;
+mod scalar_mul;
+mod schnorr;
 
 pub use abi::{abi_decode, abi_encode};
 pub use execute::execute_circuit;
@@ -41,7 +40,6 @@ use acvm::acir::BlackBoxFunc;
 enum Error {
     // #[error("The value {0} overflows in the pow2ceil function")]
     // Pow2CeilOverflow(u32),
-
     #[error("Malformed Black Box Function: {0} - {1}")]
     MalformedBlackBoxFunc(BlackBoxFunc, String),
 
@@ -50,35 +48,22 @@ enum Error {
 
     #[error(transparent)]
     FromFeature(#[from] FeatureError),
-
 }
 
 #[derive(Debug, Error)]
 enum FeatureError {
     #[error("Trying to call {name} resulted in an error")]
-    FunctionCallFailed {
-        name: String,
-        source: wasmer::RuntimeError,
-    },
+    FunctionCallFailed { name: String, source: wasmer::RuntimeError },
     #[error("Could not find function export named {name}")]
-    InvalidExport {
-        name: String,
-        source: wasmer::ExportError,
-    },
+    InvalidExport { name: String, source: wasmer::ExportError },
     #[error("No value available when value was expected")]
     NoValue,
     #[error("Value expected to be i32")]
     InvalidI32,
     #[error("Could not convert value {value} from i32 to u32")]
-    InvalidU32 {
-        value: i32,
-        source: std::num::TryFromIntError,
-    },
+    InvalidU32 { value: i32, source: std::num::TryFromIntError },
     #[error("Could not convert value {value} from i32 to usize")]
-    InvalidUsize {
-        value: i32,
-        source: std::num::TryFromIntError,
-    },
+    InvalidUsize { value: i32, source: std::num::TryFromIntError },
     #[error("Value expected to be 0 or 1 representing a boolean")]
     InvalidBool,
 }
@@ -147,8 +132,7 @@ impl Default for JsWitnessMap {
     }
 }
 
-
-// Barretenberg 
+// Barretenberg
 
 // use acvm::acir::BlackBoxFunc;
 // use super::{FeatureError, Error};
@@ -182,7 +166,6 @@ fn smoke() -> Result<(), Error> {
     Ok(())
 }
 
-
 mod wasm {
     use std::cell::RefCell;
     use wasmer::{
@@ -213,11 +196,7 @@ mod wasm {
     impl Barretenberg {
         pub(crate) fn new() -> Barretenberg {
             let (instance, memory, store) = instance_load();
-            Barretenberg {
-                memory,
-                instance,
-                store: RefCell::new(store),
-            }
+            Barretenberg { memory, instance, store: RefCell::new(store) }
         }
     }
 
@@ -262,9 +241,7 @@ mod wasm {
 
         fn try_from(value: WASMValue) -> Result<Self, Self::Error> {
             let value: i32 = value.try_into()?;
-            value
-                .try_into()
-                .map_err(|source| FeatureError::InvalidUsize { value, source })
+            value.try_into().map_err(|source| FeatureError::InvalidUsize { value, source })
         }
     }
 
@@ -281,9 +258,9 @@ mod wasm {
         type Error = FeatureError;
 
         fn try_from(value: WASMValue) -> Result<Self, Self::Error> {
-            value.0.map_or(Err(FeatureError::NoValue), |val| {
-                val.i32().ok_or(FeatureError::InvalidI32)
-            })
+            value
+                .0
+                .map_or(Err(FeatureError::NoValue), |val| val.i32().ok_or(FeatureError::InvalidI32))
         }
     }
 
@@ -346,18 +323,13 @@ mod wasm {
             for param in params.into_iter().cloned() {
                 args.push(param.try_into()?)
             }
-            let func = self.instance.exports.get_function(name).map_err(|source| {
-                FeatureError::InvalidExport {
-                    name: name.to_string(),
-                    source,
-                }
-            })?;
-            let boxed_value = func
-                .call(&mut self.store.borrow_mut(), &args)
-                .map_err(|source| FeatureError::FunctionCallFailed {
-                    name: name.to_string(),
-                    source,
+            let func =
+                self.instance.exports.get_function(name).map_err(|source| {
+                    FeatureError::InvalidExport { name: name.to_string(), source }
                 })?;
+            let boxed_value = func.call(&mut self.store.borrow_mut(), &args).map_err(|source| {
+                FeatureError::FunctionCallFailed { name: name.to_string(), source }
+            })?;
             let option_value = boxed_value.first().cloned();
 
             Ok(WASMValue(option_value))
@@ -424,11 +396,7 @@ mod wasm {
             },
         };
 
-        (
-            Instance::new(&mut store, &module, &custom_imports).unwrap(),
-            memory,
-            store,
-        )
+        (Instance::new(&mut store, &module, &custom_imports).unwrap(), memory, store)
     }
 
     fn logstr(mut env: FunctionEnvMut<Memory>, ptr: i32) {

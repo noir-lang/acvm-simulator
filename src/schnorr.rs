@@ -23,16 +23,11 @@ impl SchnorrSig for Barretenberg {
         message: &[u8],
         private_key: [u8; 32],
     ) -> Result<([u8; 32], [u8; 32]), Error> {
-        Ok(barretenberg_sys::schnorr::construct_signature(
-            message,
-            private_key,
-        ))
+        Ok(barretenberg_sys::schnorr::construct_signature(message, private_key))
     }
 
     fn construct_public_key(&self, private_key: [u8; 32]) -> Result<[u8; 64], Error> {
-        Ok(barretenberg_sys::schnorr::construct_public_key(
-            &private_key,
-        ))
+        Ok(barretenberg_sys::schnorr::construct_public_key(&private_key))
     }
 
     fn verify_signature(
@@ -42,9 +37,7 @@ impl SchnorrSig for Barretenberg {
         sig_e: [u8; 32],
         message: &[u8],
     ) -> Result<bool, Error> {
-        Ok(barretenberg_sys::schnorr::verify_signature(
-            pub_key, sig_s, sig_e, message,
-        ))
+        Ok(barretenberg_sys::schnorr::verify_signature(pub_key, sig_s, sig_e, message))
 
         // Note, currently for Barretenberg plonk, if the signature fails
         // then the whole circuit fails.

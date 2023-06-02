@@ -11,19 +11,13 @@ pub(super) fn compute_merkle_root(
     let mut index_bits: Vec<bool> = index.bits();
     index_bits.reverse();
 
-    assert!(
-        hash_path.len() <= index_bits.len(),
-        "hash path exceeds max depth of tree"
-    );
+    assert!(hash_path.len() <= index_bits.len(), "hash path exceeds max depth of tree");
     index_bits.into_iter().zip(hash_path.into_iter()).fold(
         Ok(*leaf),
         |current_node, (path_bit, path_elem)| match current_node {
             Ok(current_node) => {
-                let (left, right) = if !path_bit {
-                    (&current_node, path_elem)
-                } else {
-                    (path_elem, &current_node)
-                };
+                let (left, right) =
+                    if !path_bit { (&current_node, path_elem) } else { (path_elem, &current_node) };
                 hash_func(left, right)
             }
             Err(_) => current_node,
@@ -127,11 +121,7 @@ mod tests {
             )?;
             let is_leaf_in_tree = root == computed_merkle_root;
 
-            assert_eq!(
-                is_leaf_in_tree, test_vector.result,
-                "{}",
-                test_vector.error_msg
-            );
+            assert_eq!(is_leaf_in_tree, test_vector.result, "{}", test_vector.error_msg);
         }
 
         Ok(())

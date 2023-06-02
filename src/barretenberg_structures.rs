@@ -390,22 +390,10 @@ pub(crate) struct LogicConstraint {
 
 impl LogicConstraint {
     pub(crate) fn and(a: i32, b: i32, result: i32, num_bits: i32) -> LogicConstraint {
-        LogicConstraint {
-            a,
-            b,
-            result,
-            num_bits,
-            is_xor_gate: false,
-        }
+        LogicConstraint { a, b, result, num_bits, is_xor_gate: false }
     }
     pub(crate) fn xor(a: i32, b: i32, result: i32, num_bits: i32) -> LogicConstraint {
-        LogicConstraint {
-            a,
-            b,
-            result,
-            num_bits,
-            is_xor_gate: true,
-        }
+        LogicConstraint { a, b, result, num_bits, is_xor_gate: true }
     }
 
     fn to_bytes(&self) -> Vec<u8> {
@@ -729,11 +717,7 @@ impl BlockConstraint {
             trace.push(bb_op);
         }
         let is_ram = i8::from(is_ram_block);
-        BlockConstraint {
-            init,
-            trace,
-            is_ram,
-        }
+        BlockConstraint { init, trace, is_ram }
     }
 }
 
@@ -829,10 +813,8 @@ impl TryFrom<&Circuit> for ConstraintSystem {
                                 let out_byte_index = out_byte.witness_index() as i32;
                                 *res = out_byte_index
                             }
-                            let sha256_constraint = Sha256Constraint {
-                                inputs: sha256_inputs,
-                                result,
-                            };
+                            let sha256_constraint =
+                                Sha256Constraint { inputs: sha256_inputs, result };
 
                             sha256_constraints.push(sha256_constraint);
                         }
@@ -860,10 +842,8 @@ impl TryFrom<&Circuit> for ConstraintSystem {
                                 let out_byte_index = out_byte.witness_index() as i32;
                                 *res = out_byte_index
                             }
-                            let blake2s_constraint = Blake2sConstraint {
-                                inputs: blake2s_inputs,
-                                result,
-                            };
+                            let blake2s_constraint =
+                                Blake2sConstraint { inputs: blake2s_inputs, result };
 
                             blake2s_constraints.push(blake2s_constraint);
                         }
@@ -911,10 +891,7 @@ impl TryFrom<&Circuit> for ConstraintSystem {
 
                             schnorr_constraints.push(constraint);
                         }
-                        BlackBoxFuncCall::Pedersen {
-                            inputs: gadget_call_inputs,
-                            outputs,
-                        } => {
+                        BlackBoxFuncCall::Pedersen { inputs: gadget_call_inputs, outputs } => {
                             let mut inputs = Vec::new();
                             for scalar in gadget_call_inputs.iter() {
                                 let scalar_index = scalar.witness.witness_index() as i32;
@@ -925,11 +902,7 @@ impl TryFrom<&Circuit> for ConstraintSystem {
                             let result_x = outputs[0].witness_index() as i32;
                             let result_y = outputs[1].witness_index() as i32;
 
-                            let constraint = PedersenConstraint {
-                                inputs,
-                                result_x,
-                                result_y,
-                            };
+                            let constraint = PedersenConstraint { inputs, result_x, result_y };
 
                             pedersen_constraints.push(constraint);
                         }
@@ -943,10 +916,8 @@ impl TryFrom<&Circuit> for ConstraintSystem {
 
                             let result = output.witness_index() as i32;
 
-                            let hash_to_field_constraint = HashToFieldConstraint {
-                                inputs: hash_to_field_inputs,
-                                result,
-                            };
+                            let hash_to_field_constraint =
+                                HashToFieldConstraint { inputs: hash_to_field_inputs, result };
 
                             hash_to_field_constraints.push(hash_to_field_constraint);
                         }
@@ -1025,11 +996,8 @@ impl TryFrom<&Circuit> for ConstraintSystem {
                             let pubkey_x = outputs[0].witness_index() as i32;
                             let pubkey_y = outputs[1].witness_index() as i32;
 
-                            let fixed_base_scalar_mul = FixedBaseScalarMulConstraint {
-                                scalar,
-                                pubkey_x,
-                                pubkey_y,
-                            };
+                            let fixed_base_scalar_mul =
+                                FixedBaseScalarMulConstraint { scalar, pubkey_x, pubkey_y };
 
                             fixed_base_scalar_mul_constraints.push(fixed_base_scalar_mul);
                         }
@@ -1057,10 +1025,8 @@ impl TryFrom<&Circuit> for ConstraintSystem {
                                 let out_byte_index = out_byte.witness_index() as i32;
                                 *res = out_byte_index
                             }
-                            let keccak_constraint = Keccak256Constraint {
-                                inputs: keccak_inputs,
-                                result,
-                            };
+                            let keccak_constraint =
+                                Keccak256Constraint { inputs: keccak_inputs, result };
 
                             keccak_constraints.push(keccak_constraint);
                         }
@@ -1088,12 +1054,8 @@ impl TryFrom<&Circuit> for ConstraintSystem {
                             // computed root
                             let result = output.witness_index() as i32;
 
-                            let constraint = ComputeMerkleRootConstraint {
-                                hash_path,
-                                leaf,
-                                index,
-                                result,
-                            };
+                            let constraint =
+                                ComputeMerkleRootConstraint { hash_path, leaf, index, result };
 
                             compute_merkle_root_constraints.push(constraint);
                         }

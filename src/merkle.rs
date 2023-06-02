@@ -81,9 +81,7 @@ impl<MH: MessageHasher, PH: PathHasher> MerkleTree<MH, PH> {
 
         let total_size = 1u32 << depth;
 
-        let mut hashes: Vec<_> = (0..total_size * 2 - 2)
-            .map(|_| FieldElement::zero())
-            .collect();
+        let mut hashes: Vec<_> = (0..total_size * 2 - 2).map(|_| FieldElement::zero()).collect();
 
         let zero_message = [0u8; 64];
         let pre_images = (0..total_size).map(|_| zero_message.to_vec());
@@ -134,23 +132,16 @@ impl<MH: MessageHasher, PH: PathHasher> MerkleTree<MH, PH> {
     }
 
     fn fetch_root(&self) -> FieldElement {
-        let value = self
-            .db
-            .get("ROOT".as_bytes())
-            .expect("merkle root should always be present");
+        let value = self.db.get("ROOT".as_bytes()).expect("merkle root should always be present");
         FieldElement::from_be_bytes_reduce(value)
     }
 
     fn insert_depth(&mut self, value: u32) {
-        self.db
-            .insert("DEPTH".as_bytes(), value.to_be_bytes().into());
+        self.db.insert("DEPTH".as_bytes(), value.to_be_bytes().into());
     }
 
     fn fetch_depth(&self) -> u32 {
-        let value = self
-            .db
-            .get("DEPTH".as_bytes())
-            .expect("depth should always be present");
+        let value = self.db.get("DEPTH".as_bytes()).expect("depth should always be present");
         u32::from_be_bytes(value.to_vec().try_into().unwrap())
     }
 
@@ -161,15 +152,11 @@ impl<MH: MessageHasher, PH: PathHasher> MerkleTree<MH, PH> {
         if index > total_size {
             panic!("trying to insert at index {index}, but total width is {total_size}")
         }
-        self.db
-            .insert("EMPTY".as_bytes(), index.to_be_bytes().into());
+        self.db.insert("EMPTY".as_bytes(), index.to_be_bytes().into());
     }
 
     fn fetch_empty_index(&self) -> u32 {
-        let value = self
-            .db
-            .get("EMPTY".as_bytes())
-            .expect("empty index should always be present");
+        let value = self.db.get("EMPTY".as_bytes()).expect("empty index should always be present");
         u32::from_be_bytes(value.to_vec().try_into().unwrap())
     }
 
@@ -181,10 +168,7 @@ impl<MH: MessageHasher, PH: PathHasher> MerkleTree<MH, PH> {
     #[allow(dead_code)]
     fn fetch_preimage(&self, index: usize) -> Vec<u8> {
         let index = index as u128;
-        self.preimages_tree
-            .get(&index.to_be_bytes())
-            .unwrap()
-            .to_vec()
+        self.preimages_tree.get(&index.to_be_bytes()).unwrap().to_vec()
     }
 
     fn fetch_hash(&self, index: usize) -> FieldElement {
@@ -197,8 +181,7 @@ impl<MH: MessageHasher, PH: PathHasher> MerkleTree<MH, PH> {
     fn insert_hash(&mut self, index: u32, hash: FieldElement) {
         let index = index as u128;
 
-        self.hashes_tree
-            .insert(index.to_be_bytes(), hash.to_be_bytes());
+        self.hashes_tree.insert(index.to_be_bytes(), hash.to_be_bytes());
     }
 
     fn find_hash_from_value(&self, leaf_value: &FieldElement) -> Option<u128> {
@@ -220,10 +203,7 @@ impl<MH: MessageHasher, PH: PathHasher> MerkleTree<MH, PH> {
         let mut layer_size = self.total_size;
         for _ in 0..self.depth {
             index &= (!0) - 1;
-            path.push((
-                self.fetch_hash(offset + index),
-                self.fetch_hash(offset + index + 1),
-            ));
+            path.push((self.fetch_hash(offset + index), self.fetch_hash(offset + index + 1)));
             offset += layer_size as usize;
             layer_size /= 2;
             index /= 2;
@@ -282,10 +262,9 @@ impl<MH: MessageHasher, PH: PathHasher> MerkleTree<MH, PH> {
             self.insert_hash((offset + index) as u32, current);
 
             index &= (!0) - 1;
-            current = self.barretenberg.hash(
-                &self.fetch_hash(offset + index),
-                &self.fetch_hash(offset + index + 1),
-            )?;
+            current = self
+                .barretenberg
+                .hash(&self.fetch_hash(offset + index), &self.fetch_hash(offset + index + 1))?;
 
             offset += layer_size as usize;
             layer_size /= 2;
@@ -363,10 +342,7 @@ fn basic_interop_update() -> Result<(), Error> {
     tree.update_message(6, &[6; 64])?;
     let root = tree.update_message(7, &[7; 64])?;
 
-    assert_eq!(
-        "0ef8e14db4762ebddadb23b2225f93ca200a4c9bd37130b4d028c971bbad16b5",
-        root.to_hex()
-    );
+    assert_eq!("0ef8e14db4762ebddadb23b2225f93ca200a4c9bd37130b4d028c971bbad16b5", root.to_hex());
 
     let path = tree.get_hash_path(2);
 
