@@ -47,3 +47,18 @@ pub fn get_public_parameters_witness(
 
     Ok(JsWitnessMap::from(public_params_witness))
 }
+
+#[wasm_bindgen(js_name = getPublicWitness)]
+pub fn get_public_witness(
+    circuit: Vec<u8>,
+    solved_witness: JsWitnessMap,
+) -> Result<JsWitnessMap, JsValue> {
+    console_error_panic_hook::set_once();
+    let circuit: Circuit = Circuit::read(&*circuit).expect("Failed to deserialize circuit");
+    let witness_map = WitnessMap::from(solved_witness);
+
+    let public_witness =
+        extract_indices(&witness_map, circuit.public_inputs().0.into_iter().collect())?;
+
+    Ok(JsWitnessMap::from(public_witness))
+}
