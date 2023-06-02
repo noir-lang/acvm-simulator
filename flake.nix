@@ -45,7 +45,10 @@
         flake-utils.follows = "flake-utils";
       };
     };
+<<<<<<< HEAD
 
+=======
+>>>>>>> kh-wip-move-bb-wasmer-bindings
   };
 
   outputs =
@@ -83,6 +86,11 @@
         BARRETENBERG_BIN_DIR = "${pkgs.barretenberg-wasm}/bin";
       };
 
+      wasmEnvironment = sharedEnvironment // {
+        # We set the environment variable because barretenberg must be compiled in a special way for wasm
+        BARRETENBERG_BIN_DIR = "${pkgs.barretenberg-wasm}/bin";
+      };
+
       sourceFilter = path: type:
         (craneLib.filterCargoSources path type);
 
@@ -107,7 +115,10 @@
       };
 
       # Combine the environment and other configuration needed for crane to build with the wasm feature
-      wasmArgs = commonArgs // {
+      wasmArgs = wasmEnvironment // commonArgs // {
+        
+        cargoExtraArgs = "--target=wasm32-unknown-unknown";
+
         buildInputs = [ ];
 
       };
@@ -161,7 +172,7 @@
       # Setup the environment to match the stdenv from `nix build` & `nix flake check`, and
       # combine it with the environment settings, the inputs from our checks derivations,
       # and extra tooling via `nativeBuildInputs`
-      devShells.default = pkgs.mkShell (sharedEnvironment // {
+      devShells.default = pkgs.mkShell (wasmEnvironment // {
         # inputsFrom = builtins.attrValues checks;
 
         nativeBuildInputs = with pkgs; [
@@ -173,6 +184,8 @@
           jq
           rustToolchain
           wasm-bindgen-cli
+          nodejs
+          yarn
         ];
 
         shellHook = ''
