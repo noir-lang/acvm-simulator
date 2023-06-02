@@ -271,8 +271,6 @@ test("successfully executes a FixedBaseScalarMul opcode", async () => {
     '0x0000000000000002cf135e7506a45d632d270d45f1181294833fc48d823f272c'
   ];
 
-  console.log(decoded_inputs.return_value);
-
   expect(decoded_inputs.return_value).toEqual(expectedResult);
 });
 
@@ -384,6 +382,5 @@ test("successfully executes a SchnorrVerify opcode", async () => {
   );
 
   const decoded_inputs = abiDecode(abi, solved_witness);
-  console.log(decoded_inputs);
   expect(BigInt(decoded_inputs.return_value).toString()).toBe(1n.toString());
 });
