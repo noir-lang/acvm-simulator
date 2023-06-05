@@ -16,7 +16,6 @@ pub(crate) trait SchnorrSig {
     ) -> Result<bool, Error>;
 }
 
-#[cfg(not(feature = "native"))]
 impl SchnorrSig for Barretenberg {
     fn construct_signature(
         &self,

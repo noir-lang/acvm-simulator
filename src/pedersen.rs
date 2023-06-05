@@ -12,7 +12,6 @@ pub(crate) trait Pedersen {
     fn encrypt(&self, inputs: Vec<FieldElement>) -> Result<(FieldElement, FieldElement), Error>;
 }
 
-#[cfg(not(feature = "native"))]
 impl Pedersen for Barretenberg {
     fn compress_native(
         &self,

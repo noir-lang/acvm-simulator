@@ -119,11 +119,8 @@ pub const FIELD_BYTES: usize = 32;
 
 #[derive(Debug)]
 pub struct Barretenberg {
-    #[cfg(not(feature = "native"))]
     store: std::cell::RefCell<wasmer::Store>,
-    #[cfg(not(feature = "native"))]
     memory: wasmer::Memory,
-    #[cfg(not(feature = "native"))]
     instance: wasmer::Instance,
 }
 

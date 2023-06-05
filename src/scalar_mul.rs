@@ -6,7 +6,6 @@ pub(crate) trait ScalarMul {
     fn fixed_base(&self, input: &FieldElement) -> Result<(FieldElement, FieldElement), Error>;
 }
 
-#[cfg(not(feature = "native"))]
 impl ScalarMul for Barretenberg {
     fn fixed_base(&self, input: &FieldElement) -> Result<(FieldElement, FieldElement), Error> {
         let lhs_ptr: usize = 0;
