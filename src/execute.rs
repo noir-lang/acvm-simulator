@@ -5,9 +5,10 @@ use acvm::{
             Circuit,
         },
         native_types::{Witness, WitnessMap},
+        BlackBoxFunc,
     },
     pwg::{
-        block::Blocks, hash, logic, range, signature, OpcodeResolution,
+        block::Blocks, hash, logic, range, signature, witness_to_value, OpcodeResolution,
         PartialWitnessGeneratorStatus,
     },
     FieldElement, OpcodeResolutionError, PartialWitnessGenerator,
@@ -17,11 +18,17 @@ use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 use crate::{
     js_transforms::{field_element_to_js_string, js_value_to_field_element},
-    JsWitnessMap,
+    pedersen::Pedersen,
+    scalar_mul::ScalarMul,
+    schnorr::SchnorrSig,
+    Barretenberg, JsWitnessMap,
 };
 
+mod merkle;
 #[derive(Default)]
-struct SimulatedBackend;
+struct SimulatedBackend {
+    blackbox_vendor: Barretenberg,
+}
 
 impl PartialWitnessGenerator for SimulatedBackend {
     fn aes(
@@ -30,7 +37,7 @@ impl PartialWitnessGenerator for SimulatedBackend {
         _inputs: &[FunctionInput],
         _outputs: &[Witness],
     ) -> Result<OpcodeResolution, OpcodeResolutionError> {
-        todo!("opcode does not have a rust implementation")
+        todo!("aes opcode does not have a rust implementation")
     }
 
     fn and(
@@ -124,7 +131,30 @@ impl PartialWitnessGenerator for SimulatedBackend {
         _hash_path: &[FunctionInput],
         _output: &Witness,
     ) -> Result<OpcodeResolution, OpcodeResolutionError> {
-        todo!("opcode does not have a rust implementation")
+        let leaf = witness_to_value(_initial_witness, _leaf.witness)?;
+
+        let index = witness_to_value(_initial_witness, _index.witness)?;
+
+        let hash_path: Result<Vec<_>, _> = _hash_path
+            .iter()
+            .map(|input| witness_to_value(_initial_witness, input.witness))
+            .collect();
+
+        let computed_merkle_root = merkle::compute_merkle_root(
+            |left, right| self.blackbox_vendor.compress_native(left, right),
+            hash_path?,
+            index,
+            leaf,
+        )
+        .map_err(|err| {
+            OpcodeResolutionError::BlackBoxFunctionFailed(
+                BlackBoxFunc::ComputeMerkleRoot,
+                err.to_string(),
+            )
+        })?;
+
+        _initial_witness.insert(*_output, computed_merkle_root);
+        Ok(OpcodeResolution::Solved)
     }
 
     fn schnorr_verify(
@@ -136,7 +166,80 @@ impl PartialWitnessGenerator for SimulatedBackend {
         _message: &[FunctionInput],
         _output: &Witness,
     ) -> Result<OpcodeResolution, OpcodeResolutionError> {
-        todo!("opcode does not have a rust implementation")
+        // In barretenberg, if the signature fails, then the whole thing fails.
+
+        let pub_key_x = witness_to_value(_initial_witness, _public_key_x.witness)?.to_be_bytes();
+        let pub_key_y = witness_to_value(_initial_witness, _public_key_y.witness)?.to_be_bytes();
+
+        let pub_key_bytes: Vec<u8> = pub_key_x.iter().copied().chain(pub_key_y.to_vec()).collect();
+        let pub_key: [u8; 64] = pub_key_bytes.try_into().map_err(|v: Vec<u8>| {
+            OpcodeResolutionError::BlackBoxFunctionFailed(
+                BlackBoxFunc::SchnorrVerify,
+                format!("expected pubkey size {} but received {}", 64, v.len()),
+            )
+        })?;
+
+        let mut signature = _signature.iter();
+        let mut sig_s = [0u8; 32];
+        for (i, sig) in sig_s.iter_mut().enumerate() {
+            let _sig_i = signature.next().ok_or_else(|| {
+                OpcodeResolutionError::BlackBoxFunctionFailed(
+                    BlackBoxFunc::SchnorrVerify,
+                    format!("sig_s should be 32 bytes long, found only {i} bytes"),
+                )
+            })?;
+            let sig_i = witness_to_value(_initial_witness, _sig_i.witness)?;
+            *sig = *sig_i.to_be_bytes().last().ok_or_else(|| {
+                OpcodeResolutionError::BlackBoxFunctionFailed(
+                    BlackBoxFunc::SchnorrVerify,
+                    "could not get last bytes".into(),
+                )
+            })?;
+        }
+        let mut sig_e = [0u8; 32];
+        for (i, sig) in sig_e.iter_mut().enumerate() {
+            let _sig_i = signature.next().ok_or_else(|| {
+                OpcodeResolutionError::BlackBoxFunctionFailed(
+                    BlackBoxFunc::SchnorrVerify,
+                    format!("sig_e should be 32 bytes long, found only {i} bytes"),
+                )
+            })?;
+            let sig_i = witness_to_value(_initial_witness, _sig_i.witness)?;
+            *sig = *sig_i.to_be_bytes().last().ok_or_else(|| {
+                OpcodeResolutionError::BlackBoxFunctionFailed(
+                    BlackBoxFunc::SchnorrVerify,
+                    "could not get last bytes".into(),
+                )
+            })?;
+        }
+
+        let mut message_bytes = Vec::new();
+        for msg in _message.iter() {
+            let msg_i_field = witness_to_value(_initial_witness, msg.witness)?;
+            let msg_i = *msg_i_field.to_be_bytes().last().ok_or_else(|| {
+                OpcodeResolutionError::BlackBoxFunctionFailed(
+                    BlackBoxFunc::SchnorrVerify,
+                    "could not get last bytes".into(),
+                )
+            })?;
+            message_bytes.push(msg_i);
+        }
+
+        let valid_signature = self
+            .blackbox_vendor
+            .verify_signature(pub_key, sig_s, sig_e, &message_bytes)
+            .map_err(|err| {
+                OpcodeResolutionError::BlackBoxFunctionFailed(
+                    BlackBoxFunc::SchnorrVerify,
+                    err.to_string(),
+                )
+            })?;
+        if !valid_signature {
+            dbg!("signature has failed to verify");
+        }
+
+        _initial_witness.insert(*_output, FieldElement::from(valid_signature));
+        Ok(OpcodeResolution::Solved)
     }
 
     fn pedersen(
@@ -145,7 +248,18 @@ impl PartialWitnessGenerator for SimulatedBackend {
         _inputs: &[FunctionInput],
         _outputs: &[Witness],
     ) -> Result<OpcodeResolution, OpcodeResolutionError> {
-        todo!("opcode does not have a rust implementation")
+        // todo!("opcode does not have a rust implementation")
+
+        let scalars: Result<Vec<_>, _> =
+            _inputs.iter().map(|input| witness_to_value(_initial_witness, input.witness)).collect();
+        let scalars: Vec<_> = scalars?.into_iter().cloned().collect();
+
+        let (res_x, res_y) = self.blackbox_vendor.encrypt(scalars).map_err(|err| {
+            OpcodeResolutionError::BlackBoxFunctionFailed(BlackBoxFunc::Pedersen, err.to_string())
+        })?;
+        _initial_witness.insert(_outputs[0], res_x);
+        _initial_witness.insert(_outputs[1], res_y);
+        Ok(OpcodeResolution::Solved)
     }
 
     fn fixed_base_scalar_mul(
@@ -154,7 +268,18 @@ impl PartialWitnessGenerator for SimulatedBackend {
         _input: &FunctionInput,
         _outputs: &[Witness],
     ) -> Result<OpcodeResolution, OpcodeResolutionError> {
-        todo!("opcode does not have a rust implementation")
+        let scalar = witness_to_value(_initial_witness, _input.witness)?;
+
+        let (pub_x, pub_y) = self.blackbox_vendor.fixed_base(scalar).map_err(|err| {
+            OpcodeResolutionError::BlackBoxFunctionFailed(
+                BlackBoxFunc::FixedBaseScalarMul,
+                err.to_string(),
+            )
+        })?;
+
+        _initial_witness.insert(_outputs[0], pub_x);
+        _initial_witness.insert(_outputs[1], pub_y);
+        Ok(OpcodeResolution::Solved)
     }
 }
 

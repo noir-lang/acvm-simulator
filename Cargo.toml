@@ -15,19 +15,31 @@ crate-type = ["cdylib"]
 
 [dependencies]
 acvm = "0.12.0"
+# acvm-backend-barretenberg = { git = "https://github.com/noir-lang/acvm-backend-barretenberg", branch = "phated/wasmer3-testing", default-features = false, features = ["wasm"]}
 iter-extended = { git = "https://github.com/noir-lang/noir", rev = "b938c7eeaa5ee493b28cad5451e7d5b7921ad934"}
 noirc_abi = { git = "https://github.com/noir-lang/noir", rev = "b938c7eeaa5ee493b28cad5451e7d5b7921ad934"}
-wasm-bindgen = { version = "0.2.85", features = ["serde-serialize"] }
-wasm-bindgen-futures = "0.4.34"
+thiserror = "1.0.21"
+wasm-bindgen = { version = "0.2.86", features = ["serde-serialize"] }
+wasm-bindgen-futures = "0.4.36"
 serde = { version = "1.0.136", features = ["derive"] }
+serde-big-array = "0.5.1"
 log = "0.4.17"
 wasm-logger = "0.2.0"
 console_error_panic_hook = "0.1.7"
 gloo-utils = { version = "0.1", features = ["serde"] }
 js-sys = "0.3.62"
+# barretenberg-sys = { version = "0.1.2"}
+getrandom = { version = "0.2", features = [ "js" ]}
+rust-embed = { version = "6.6.0", features = [
+    "debug-embed",
+    "interpolate-folder-path",
+    "include-exclude",
+] }
+wasmer = { version = "3.3", default-features = false, features = [ "js-default" ] }
+blake2 = "0.10.6"
 
 [build-dependencies]
 build-data = "0.1.3"
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.35"
+wasm-bindgen-test = "0.3.36"
