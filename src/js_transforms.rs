@@ -62,7 +62,7 @@ mod test {
         FieldElement,
     };
     use wasm_bindgen::JsValue;
-    use wasm_bindgen_test::*;
+    
 
     use crate::JsWitnessMap;
 
