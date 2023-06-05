@@ -33,6 +33,9 @@ jobs:
         run: |
           nix build .#
 
+      - name: Install JS dependencies
+        run: yarn
+  
       - name: Run node tests
         run: yarn test
 
