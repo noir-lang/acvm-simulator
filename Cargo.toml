@@ -21,7 +21,7 @@ thiserror = "1.0.21"
 wasm-bindgen = { version = "0.2.86", features = ["serde-serialize"] }
 wasm-bindgen-futures = "0.4.36"
 serde = { version = "1.0.136", features = ["derive"] }
-serde-big-array = "0.5.1"
+# serde-big-array = "0.5.1"
 log = "0.4.17"
 wasm-logger = "0.2.0"
 console_error_panic_hook = "0.1.7"

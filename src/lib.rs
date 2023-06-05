@@ -21,18 +21,18 @@ mod schnorr;
 pub use abi::{abi_decode, abi_encode};
 pub use execute::execute_circuit;
 
-use acvm::acir::BlackBoxFunc;
+// use acvm::acir::BlackBoxFunc;
 
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Error)]
 enum Error {
     // #[error("The value {0} overflows in the pow2ceil function")]
     // Pow2CeilOverflow(u32),
-    #[error("Malformed Black Box Function: {0} - {1}")]
-    MalformedBlackBoxFunc(BlackBoxFunc, String),
+    // #[error("Malformed Black Box Function: {0} - {1}")]
+    // MalformedBlackBoxFunc(BlackBoxFunc, String),
 
-    #[error("Unsupported Black Box Function: {0}")]
-    UnsupportedBlackBoxFunc(BlackBoxFunc),
+    // #[error("Unsupported Black Box Function: {0}")]
+    // UnsupportedBlackBoxFunc(BlackBoxFunc),
 
     #[error(transparent)]
     FromFeature(#[from] FeatureError),
@@ -164,7 +164,7 @@ mod wasm {
     use super::{Barretenberg, Error, FeatureError};
 
     /// The number of bytes necessary to represent a pointer to memory inside the wasm.
-    pub(super) const POINTER_BYTES: usize = 4;
+    // pub(super) const POINTER_BYTES: usize = 4;
 
     /// The Barretenberg WASM gives us 1024 bytes of scratch space which we can use without
     /// needing to allocate/free it ourselves. This can be useful for when we need to pass in several small variables
@@ -290,10 +290,10 @@ mod wasm {
             buf
         }
 
-        pub(crate) fn get_pointer(&self, ptr_ptr: usize) -> usize {
-            let ptr: [u8; POINTER_BYTES] = self.read_memory(ptr_ptr);
-            u32::from_le_bytes(ptr) as usize
-        }
+        // pub(crate) fn get_pointer(&self, ptr_ptr: usize) -> usize {
+        //     let ptr: [u8; POINTER_BYTES] = self.read_memory(ptr_ptr);
+        //     u32::from_le_bytes(ptr) as usize
+        // }
 
         pub(crate) fn call(&self, name: &str, param: &WASMValue) -> Result<WASMValue, Error> {
             self.call_multiple(name, vec![param])
@@ -334,13 +334,13 @@ mod wasm {
             Ok(ptr.into())
         }
 
-        /// Frees a pointer.
-        /// Notice we consume the Value, if you clone the value before passing it to free
-        /// It most likely is a bug
-        pub(super) fn free(&self, pointer: WASMValue) -> Result<(), Error> {
-            self.call("bbfree", &pointer)?;
-            Ok(())
-        }
+        
+        
+        
+        // pub(super) fn free(&self, pointer: WASMValue) -> Result<(), Error> {
+        //     self.call("bbfree", &pointer)?;
+        //     Ok(())
+        // }
     }
 
     fn instance_load() -> (Instance, Memory, Store) {
