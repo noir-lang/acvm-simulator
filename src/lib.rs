@@ -26,14 +26,6 @@ pub use execute::execute_circuit;
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Error)]
 enum Error {
-    // #[error("The value {0} overflows in the pow2ceil function")]
-    // Pow2CeilOverflow(u32),
-    // #[error("Malformed Black Box Function: {0} - {1}")]
-    // MalformedBlackBoxFunc(BlackBoxFunc, String),
-
-    // #[error("Unsupported Black Box Function: {0}")]
-    // UnsupportedBlackBoxFunc(BlackBoxFunc),
-
     #[error(transparent)]
     FromFeature(#[from] FeatureError),
 }
@@ -121,9 +113,6 @@ impl Default for JsWitnessMap {
 }
 
 // Barretenberg
-
-// use acvm::acir::BlackBoxFunc;
-// use super::{FeatureError, Error};
 
 /// The number of bytes necessary to store a `FieldElement`.
 pub const FIELD_BYTES: usize = 32;
@@ -334,9 +323,6 @@ mod wasm {
             Ok(ptr.into())
         }
 
-        
-        
-        
         // pub(super) fn free(&self, pointer: WASMValue) -> Result<(), Error> {
         //     self.call("bbfree", &pointer)?;
         //     Ok(())

@@ -112,14 +112,6 @@ fn basic_interop() -> Result<(), Error> {
     Ok(())
 }
 
-// #[cfg(test)]
-// mod test {
-//     #[cfg(target_arch = "wasm32")]
-//     use wasm_bindgen_test::wasm_bindgen_test as test;
-
-//     #[cfg(target_arch = "wasm32")]
-//     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
-
 #[test]
 fn pedersen_hash_to_point() -> Result<(), Error> {
     let barretenberg = Barretenberg::new();
