@@ -27,12 +27,15 @@ jobs:
       - name: Build acvm-simulator
         run: |
           nix build .#
+          
+      - name: Dereference symlink
+        run: echo "UPLOAD_PATH=$(readlink -f result)" >> $GITHUB_ENV
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: acvm-simulator
-          path: ./result
+          path: ${{ env.UPLOAD_PATH }}
           retention-days: 3
 
   test-node:
