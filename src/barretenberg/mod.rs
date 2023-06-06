@@ -1,3 +1,9 @@
+//! ACVM simulator is independent of the proving backend against which the ACIR code is being proven.
+//! However there are currently a few opcodes for which there is currently no rust implementation so we must
+//! use the C++ implementations included in Aztec Lab's Barretenberg library.
+//!
+//! As [`acvm`] includes rust implementations for these opcodes, this module can be removed.
+
 mod barretenberg_structures;
 pub(crate) mod pedersen;
 pub(crate) mod scalar_mul;
