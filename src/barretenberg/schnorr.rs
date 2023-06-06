@@ -1,4 +1,4 @@
-use crate::{Barretenberg, Error};
+use super::{wasm::WASM_SCRATCH_BYTES, Barretenberg, Error, FIELD_BYTES};
 
 pub(crate) trait SchnorrSig {
     fn construct_signature(
@@ -22,8 +22,6 @@ impl SchnorrSig for Barretenberg {
         message: &[u8],
         private_key: [u8; 32],
     ) -> Result<([u8; 32], [u8; 32]), Error> {
-        use super::{wasm::WASM_SCRATCH_BYTES, FIELD_BYTES};
-
         let sig_s_ptr: usize = 0;
         let sig_e_ptr: usize = sig_s_ptr + FIELD_BYTES;
         let private_key_ptr: usize = sig_e_ptr + FIELD_BYTES;
@@ -54,8 +52,6 @@ impl SchnorrSig for Barretenberg {
 
     #[allow(dead_code)]
     fn construct_public_key(&self, private_key: [u8; 32]) -> Result<[u8; 64], Error> {
-        use super::FIELD_BYTES;
-
         let private_key_ptr: usize = 0;
         let result_ptr: usize = private_key_ptr + FIELD_BYTES;
 
@@ -76,8 +72,6 @@ impl SchnorrSig for Barretenberg {
         sig_e: [u8; 32],
         message: &[u8],
     ) -> Result<bool, Error> {
-        use super::wasm::WASM_SCRATCH_BYTES;
-
         let public_key_ptr: usize = 0;
         let sig_s_ptr: usize = public_key_ptr + pub_key.len();
         let sig_e_ptr: usize = sig_s_ptr + sig_s.len();

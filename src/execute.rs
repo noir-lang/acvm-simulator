@@ -17,11 +17,9 @@ use acvm::{
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 use crate::{
+    barretenberg::{pedersen::Pedersen, scalar_mul::ScalarMul, schnorr::SchnorrSig, Barretenberg},
     js_transforms::{field_element_to_js_string, js_value_to_field_element},
-    pedersen::Pedersen,
-    scalar_mul::ScalarMul,
-    schnorr::SchnorrSig,
-    Barretenberg, JsWitnessMap,
+    JsWitnessMap,
 };
 
 #[derive(Default)]
