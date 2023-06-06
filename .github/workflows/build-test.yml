@@ -27,7 +27,7 @@ jobs:
       - name: Build acvm-simulator
         run: |
           nix build .#
-          
+
       - name: Dereference symlink
         run: echo "UPLOAD_PATH=$(readlink -f result)" >> $GITHUB_ENV
 
@@ -55,7 +55,7 @@ jobs:
 
       - name: Set up test environment
         uses: ./.github/actions/setup
- 
+
       - name: Run node tests
         run: yarn test
 
@@ -76,6 +76,9 @@ jobs:
 
       - name: Set up test environment
         uses: ./.github/actions/setup
+
+      - name: Install playwright deps
+        run: npx playwright install --with-deps webkit
 
       - name: Run browser tests
         run: yarn test:browser
