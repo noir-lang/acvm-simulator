@@ -77,5 +77,8 @@ jobs:
       - name: Set up test environment
         uses: ./.github/actions/setup
 
+      - name: Install Playwright dependencies
+        run: npx playwright install --with-deps webkit
+
       - name: Run browser tests
         run: yarn test:browser
