@@ -156,7 +156,6 @@
           jq
           rustToolchain
           wasm-bindgen-cli
-          toml2json
         ];
 
         buildPhaseCargoCommand = ''
@@ -177,7 +176,6 @@
 
         nativeBuildInputs = with pkgs; [
           starship
-          toml2json
           nil
           nixpkgs-fmt
           which
