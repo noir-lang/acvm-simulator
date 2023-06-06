@@ -1,3 +1,4 @@
+import { expect } from "chai";
 import initACVMSimulator, {
   abiEncode,
   abiDecode,
@@ -6,7 +7,7 @@ import initACVMSimulator, {
   OracleCallback,
 } from "../../result/";
 
-test("successfully executes circuit and extracts return value", async () => {
+it("successfully executes circuit and extracts return value", async () => {
   await initACVMSimulator();
 
   // Noir program which enforces that x != y and returns x + y.
@@ -72,17 +73,17 @@ test("successfully executes circuit and extracts return value", async () => {
 
   // Solved witness should be consistent with initial witness
   initial_witness.forEach((value, key) => {
-    expect(solved_witness.get(key) as string).toBe(value);
+    expect(solved_witness.get(key) as string).to.be.eq(value);
   });
   // Solved witness should contain expected return value
-  expect(BigInt(solved_witness.get(return_witness) as string)).toBe(3n);
+  expect(BigInt(solved_witness.get(return_witness) as string)).to.be.eq(3n);
 
   const decoded_inputs = abiDecode(abi, solved_witness);
 
-  expect(BigInt(decoded_inputs.return_value)).toBe(3n);
+  expect(BigInt(decoded_inputs.return_value)).to.be.eq(3n);
 });
 
-test("successfully executes a pedersen hash", async () => {
+it("successfully executes a pedersen hash", async () => {
   await initACVMSimulator();
 
   const abi = {
@@ -119,10 +120,10 @@ test("successfully executes a pedersen hash", async () => {
     "0x24f50d25508b4dfb1e8a834e39565f646e217b24cb3a475c2e4991d1bb07a9d8",
   ];
 
-  return expect(decoded_inputs.return_value).toEqual(expectedResult);
+  return expect(decoded_inputs.return_value).to.be.deep.eq(expectedResult);
 });
 
-test("successfully executes a FixedBaseScalarMul opcode", async () => {
+it("successfully executes a FixedBaseScalarMul opcode", async () => {
   await initACVMSimulator();
 
   const abi = {
@@ -159,10 +160,10 @@ test("successfully executes a FixedBaseScalarMul opcode", async () => {
     "0x0000000000000002cf135e7506a45d632d270d45f1181294833fc48d823f272c",
   ];
 
-  expect(decoded_inputs.return_value).toEqual(expectedResult);
+  expect(decoded_inputs.return_value).to.be.deep.eq(expectedResult);
 });
 
-test("successfully processes oracle opcodes", async () => {
+it("successfully processes oracle opcodes", async () => {
   await initACVMSimulator();
 
   // We use a handwritten circuit which uses an oracle to calculate the sum of witnesses 1 and 2
@@ -241,20 +242,20 @@ test("successfully processes oracle opcodes", async () => {
   );
 
   // Check that expected values were passed to oracle callback.
-  expect(observedName).toBe("example_oracle");
-  expect(observedInputs).toStrictEqual([
+  expect(observedName).to.be.eq("example_oracle");
+  expect(observedInputs).to.be.deep.eq([
     initial_witness.get(1) as string,
     initial_witness.get(2) as string,
   ]);
 
   // If incorrect value is written into circuit then execution should halt due to unsatisfied constraint in
   // arithmetic opcode. Nevertheless, check that returned value was inserted correctly.
-  expect(solved_witness.get(3) as string).toBe(
+  expect(solved_witness.get(3) as string).to.be.eq(
     "0x0000000000000000000000000000000000000000000000000000000000000002"
   );
 });
 
-test("successfully executes a SchnorrVerify opcode", async () => {
+it("successfully executes a SchnorrVerify opcode", async () => {
   await initACVMSimulator();
 
   const abi = {
@@ -341,5 +342,7 @@ test("successfully executes a SchnorrVerify opcode", async () => {
   );
 
   const decoded_inputs = abiDecode(abi, solved_witness);
-  expect(BigInt(decoded_inputs.return_value).toString()).toBe(1n.toString());
+  expect(BigInt(decoded_inputs.return_value).toString()).to.be.eq(
+    1n.toString()
+  );
 });
