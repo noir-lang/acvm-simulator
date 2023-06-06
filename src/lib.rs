@@ -13,7 +13,6 @@ mod abi;
 mod barretenberg_structures;
 mod execute;
 mod js_transforms;
-mod merkle;
 mod pedersen;
 mod scalar_mul;
 mod schnorr;

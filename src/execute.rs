@@ -24,7 +24,6 @@ use crate::{
     Barretenberg, JsWitnessMap,
 };
 
-mod merkle;
 #[derive(Default)]
 struct SimulatedBackend {
     blackbox_vendor: Barretenberg,
@@ -131,30 +130,7 @@ impl PartialWitnessGenerator for SimulatedBackend {
         _hash_path: &[FunctionInput],
         _output: &Witness,
     ) -> Result<OpcodeResolution, OpcodeResolutionError> {
-        let leaf = witness_to_value(_initial_witness, _leaf.witness)?;
-
-        let index = witness_to_value(_initial_witness, _index.witness)?;
-
-        let hash_path: Result<Vec<_>, _> = _hash_path
-            .iter()
-            .map(|input| witness_to_value(_initial_witness, input.witness))
-            .collect();
-
-        let computed_merkle_root = merkle::compute_merkle_root(
-            |left, right| self.blackbox_vendor.compress_native(left, right),
-            hash_path?,
-            index,
-            leaf,
-        )
-        .map_err(|err| {
-            OpcodeResolutionError::BlackBoxFunctionFailed(
-                BlackBoxFunc::ComputeMerkleRoot,
-                err.to_string(),
-            )
-        })?;
-
-        _initial_witness.insert(*_output, computed_merkle_root);
-        Ok(OpcodeResolution::Solved)
+        unimplemented!("compute_merkle_root is removed in acvm 0.13.0")
     }
 
     fn schnorr_verify(
