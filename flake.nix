@@ -102,9 +102,11 @@
           src = craneLib.path ./.;
           filter = sourceFilter;
         };
+        
+        cargoClippyExtraArgs = "--all-targets -- -D warnings";
+        # cargoTestExtraArgs = "--workspace";
 
-        # Running checks don't do much more than compiling itself and increase
-        # the build time by a lot, so we disable them throughout all our flakes
+        # We don't want to run checks or tests when just building the project
         doCheck = false;
       };
 
@@ -118,9 +120,6 @@
       };
 
       # Build *just* the cargo dependencies, so we can reuse all of that work between runs
-      # native-cargo-artifacts = craneLib.buildDepsOnly nativeArgs;
-      wasm-cargo-artifacts = craneLib.buildDepsOnly wasmArgs;
-
       cargoArtifacts = craneLib.buildDepsOnly wasmArgs;
 
       wasm-bindgen-cli = pkgs.callPackage ./nix/wasm-bindgen-cli/default.nix {
@@ -131,10 +130,16 @@
       };
     in
     rec {
-      packages.default = craneLib.mkCargoDerivation (wasmArgs // rec {
-        pname = "acvm-simulator-wasm";
-        # version = "1.0.0";
+      checks = {
+        cargo-clippy = craneLib.cargoClippy (wasmArgs // {
+          inherit cargoArtifacts;
+          inherit GIT_COMMIT GIT_DIRTY;
 
+          doCheck = true;
+        });
+      };
+
+      packages.default = craneLib.mkCargoDerivation (wasmArgs // rec {
         inherit cargoArtifacts;
         inherit GIT_COMMIT;
         inherit GIT_DIRTY;
