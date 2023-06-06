@@ -6,9 +6,13 @@ if [ -d ./pkg/ ]; then
     rm -rf ./pkg/
 fi
 
+WASM_BINARY = ./target/wasm32-unknown-unknown/release/acvm_simulator.wasm
+NODE_WASM = ./pkg/nodejs/acvm_simulator_bg.wasm
+BROWSER_WASM = ./pkg/nodejs/acvm_simulator_bg.wasm
+
 # Build the new wasm package
 cargo build --lib --release --target wasm32-unknown-unknown
-wasm-bindgen ./target/wasm32-unknown-unknown/release/acvm_simulator.wasm --out-dir ./pkg/nodejs --typescript --target nodejs
-wasm-bindgen ./target/wasm32-unknown-unknown/release/acvm_simulator.wasm --out-dir ./pkg/web --typescript --target web
-wasm-opt ./pkg/nodejs/acvm_simulator_bg.wasm -o ./pkg/nodejs/acvm_simulator_bg.wasm -O
-wasm-opt ./pkg/web/acvm_simulator_bg.wasm -o ./pkg/web/acvm_simulator_bg.wasm -O
+wasm-bindgen $WASM_BINARY --out-dir ./pkg/nodejs --typescript --target nodejs
+wasm-bindgen $WASM_BINARY --out-dir ./pkg/web --typescript --target web
+wasm-opt $NODE_WASM -o $NODE_WASM -O
+wasm-opt $BROWSER_WASM -o $BROWSER_WASM -O
