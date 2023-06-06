@@ -207,11 +207,6 @@ mod wasm {
             buf
         }
 
-        // pub(crate) fn get_pointer(&self, ptr_ptr: usize) -> usize {
-        //     let ptr: [u8; POINTER_BYTES] = self.read_memory(ptr_ptr);
-        //     u32::from_le_bytes(ptr) as usize
-        // }
-
         pub(crate) fn call(&self, name: &str, param: &WASMValue) -> Result<WASMValue, Error> {
             self.call_multiple(name, vec![param])
         }
