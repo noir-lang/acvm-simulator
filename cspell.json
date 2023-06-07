@@ -4,6 +4,7 @@
         // In code
         //
         "blackbox",
+        "bindir",
         "cout",
         "jsdoc",
         "keccak",
@@ -12,6 +13,7 @@
         "prehashed",
         "pubkey",
         "schnorr",
+        "rustc",
         "secp",
         "vecmap",
         // Wasm

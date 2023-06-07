@@ -1,4 +1,3 @@
-result
 /target
 .DS_Store
 examples/**/target/
@@ -7,6 +6,7 @@ examples/9
 node_modules
 pkg/
 lib/
+result
 .direnv
 
 # Yarn
