@@ -14,7 +14,5 @@ In order to build the wasm package, the following must be installed:
 The wasm package can be built using the command below:
 
 ```bash
-./build-wasm
+./build.sh
 ```
-
-Using `wasm-pack` directly isn't recommended as it doesn't generate a complete `package.json` file, resulting in files being omitted from the published package.
