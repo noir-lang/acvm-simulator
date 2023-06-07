@@ -102,7 +102,7 @@
           src = craneLib.path ./.;
           filter = sourceFilter;
         };
-        
+
         cargoClippyExtraArgs = "--all-targets -- -D warnings";
         # cargoTestExtraArgs = "--workspace";
 
@@ -112,7 +112,7 @@
 
       # Combine the environment and other configuration needed for crane to build with the wasm feature
       wasmArgs = wasmEnvironment // commonArgs // {
-        
+
         cargoExtraArgs = "--target=wasm32-unknown-unknown";
 
         buildInputs = [ ];
