@@ -40,7 +40,7 @@ jobs:
 
   test-node:
     needs: [build-acvm-simulator]
-    name: Test Wasm in Node.js
+    name: Node.js Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -61,7 +61,7 @@ jobs:
 
   test-browser:
     needs: [build-acvm-simulator]
-    name: Test Wasm in Browser
+    name: Browser Tests
     runs-on: ubuntu-latest
 
     steps:

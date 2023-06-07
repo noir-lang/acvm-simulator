@@ -9,7 +9,7 @@ concurrency:
 
 jobs:
   checks:
-    name: Test on ${{ matrix.os }}
+    name: Nix checks on ${{ matrix.os }}
     runs-on: ${{ matrix.runner }}
 
     strategy:
