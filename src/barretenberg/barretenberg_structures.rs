@@ -1,7 +1,6 @@
 use acvm::FieldElement;
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default)]
 pub(crate) struct Assignments(Vec<FieldElement>);
 
 impl Assignments {
