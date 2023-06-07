@@ -1,6 +1,6 @@
 # ACVM Simulator
 
-The ACVM Simulator enables users to simulate a Noir program, i.e. executing it and generating partial witness (for subsequent proving of the execution).
+The ACVM Simulator enables users to execute an ACIR program, i.e. generating an initial witness from a set of inputs and calculating a partial witness. This partial witness can then be used to create a proof of execution using an ACVM backend.
 
 Note: A number of ACIR opcodes do not currently have rust implementations and so the ACVM simulator does not support them.
 
