@@ -50,51 +50,34 @@ impl PartialWitnessGenerator for SimulatedBackend {
             )
         })?;
 
-        let mut signature = _signature.iter();
-        let mut sig_s = [0u8; 32];
-        for (i, sig) in sig_s.iter_mut().enumerate() {
-            let _sig_i = signature.next().ok_or_else(|| {
-                OpcodeResolutionError::BlackBoxFunctionFailed(
-                    BlackBoxFunc::SchnorrVerify,
-                    format!("sig_s should be 32 bytes long, found only {i} bytes"),
-                )
-            })?;
-            let sig_i = witness_to_value(_initial_witness, _sig_i.witness)?;
-            *sig = *sig_i.to_be_bytes().last().ok_or_else(|| {
-                OpcodeResolutionError::BlackBoxFunctionFailed(
-                    BlackBoxFunc::SchnorrVerify,
-                    "could not get last bytes".into(),
-                )
-            })?;
-        }
-        let mut sig_e = [0u8; 32];
-        for (i, sig) in sig_e.iter_mut().enumerate() {
-            let _sig_i = signature.next().ok_or_else(|| {
-                OpcodeResolutionError::BlackBoxFunctionFailed(
-                    BlackBoxFunc::SchnorrVerify,
-                    format!("sig_e should be 32 bytes long, found only {i} bytes"),
-                )
-            })?;
-            let sig_i = witness_to_value(_initial_witness, _sig_i.witness)?;
-            *sig = *sig_i.to_be_bytes().last().ok_or_else(|| {
-                OpcodeResolutionError::BlackBoxFunctionFailed(
-                    BlackBoxFunc::SchnorrVerify,
-                    "could not get last bytes".into(),
-                )
-            })?;
-        }
+        let signature_bytes: Vec<u8> = _signature
+            .iter()
+            .map(|sig_elem| {
+                let witness_value = *witness_to_value(_initial_witness, sig_elem.witness)?;
+                witness_value.to_be_bytes().last().expect("byte array is never empty")
+            })
+            .collect::<Result<_, _>>()?;
 
-        let mut message_bytes = Vec::new();
-        for msg in _message.iter() {
-            let msg_i_field = witness_to_value(_initial_witness, msg.witness)?;
-            let msg_i = *msg_i_field.to_be_bytes().last().ok_or_else(|| {
-                OpcodeResolutionError::BlackBoxFunctionFailed(
-                    BlackBoxFunc::SchnorrVerify,
-                    "could not get last bytes".into(),
-                )
-            })?;
-            message_bytes.push(msg_i);
-        }
+        let sig_s = signature_bytes[0..32].try_into().map_err(|_| {
+            OpcodeResolutionError::BlackBoxFunctionFailed(
+                BlackBoxFunc::SchnorrVerify,
+                format!("signature should be 64 bytes long, found only {} bytes", _signature.len()),
+            )
+        })?;
+        let sig_e = signature_bytes[32..64].try_into().map_err(|_| {
+            OpcodeResolutionError::BlackBoxFunctionFailed(
+                BlackBoxFunc::SchnorrVerify,
+                format!("signature should be 64 bytes long, found only {} bytes", _signature.len()),
+            )
+        })?;
+
+        let message_bytes: Vec<u8> = _message
+            .iter()
+            .map(|message_elem| {
+                let witness_value = *witness_to_value(_initial_witness, message_elem.witness)?;
+                witness_value.to_be_bytes().last().expect("byte array is never empty")
+            })
+            .collect::<Result<_, _>>()?;
 
         let valid_signature = self
             .blackbox_vendor
