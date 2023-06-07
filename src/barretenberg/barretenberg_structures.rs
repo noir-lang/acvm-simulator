@@ -4,14 +4,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub(crate) struct Assignments(Vec<FieldElement>);
 
-// This is a separate impl so the constructor can get the wasm_bindgen macro in the future
-impl Assignments {
-    #[allow(dead_code)]
-    pub(crate) fn new() -> Assignments {
-        Assignments::default()
-    }
-}
-
 impl Assignments {
     pub(crate) fn to_bytes(&self) -> Vec<u8> {
         let mut buffer = Vec::new();
@@ -24,15 +16,6 @@ impl Assignments {
         }
 
         buffer
-    }
-}
-
-impl IntoIterator for Assignments {
-    type Item = FieldElement;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
     }
 }
 
