@@ -14,7 +14,6 @@ use barretenberg_structures::Assignments;
 /// The number of bytes necessary to store a `FieldElement`.
 const FIELD_BYTES: usize = 32;
 
-#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, thiserror::Error)]
 pub(crate) enum Error {
     #[error(transparent)]
