@@ -9,7 +9,6 @@
         "keccak",
         "merkle",
         "pedersen",
-        "plookup",
         "prehashed",
         "pubkey",
         "schnorr",
@@ -23,6 +22,7 @@
         "fdstat",
         "getrandom",
         "logstr",
+        "plookup",
         "wasi",
         "wasmer",
         // Dependencies
