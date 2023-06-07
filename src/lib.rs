@@ -12,9 +12,11 @@ mod abi;
 mod barretenberg;
 mod execute;
 mod js_transforms;
+mod public_witness;
 
 pub use abi::{abi_decode, abi_encode};
 pub use execute::execute_circuit;
+pub use public_witness::{get_public_parameters_witness, get_public_witness, get_return_witness};
 
 #[derive(Serialize, Deserialize)]
 pub struct BuildInfo {
