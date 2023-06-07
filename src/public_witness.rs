@@ -2,7 +2,8 @@ use acvm::acir::{
     circuit::Circuit,
     native_types::{Witness, WitnessMap},
 };
-use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
+use js_sys::JsString;
+use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::JsWitnessMap;
 
@@ -22,7 +23,7 @@ fn extract_indices(witness_map: &WitnessMap, indices: Vec<Witness>) -> Result<Wi
 pub fn get_return_witness(
     circuit: Vec<u8>,
     solved_witness: JsWitnessMap,
-) -> Result<JsWitnessMap, JsValue> {
+) -> Result<JsWitnessMap, JsString> {
     console_error_panic_hook::set_once();
     let circuit: Circuit = Circuit::read(&*circuit).expect("Failed to deserialize circuit");
     let witness_map = WitnessMap::from(solved_witness);
@@ -37,7 +38,7 @@ pub fn get_return_witness(
 pub fn get_public_parameters_witness(
     circuit: Vec<u8>,
     solved_witness: JsWitnessMap,
-) -> Result<JsWitnessMap, JsValue> {
+) -> Result<JsWitnessMap, JsString> {
     console_error_panic_hook::set_once();
     let circuit: Circuit = Circuit::read(&*circuit).expect("Failed to deserialize circuit");
     let witness_map = WitnessMap::from(solved_witness);
@@ -52,7 +53,7 @@ pub fn get_public_parameters_witness(
 pub fn get_public_witness(
     circuit: Vec<u8>,
     solved_witness: JsWitnessMap,
-) -> Result<JsWitnessMap, JsValue> {
+) -> Result<JsWitnessMap, JsString> {
     console_error_panic_hook::set_once();
     let circuit: Circuit = Circuit::read(&*circuit).expect("Failed to deserialize circuit");
     let witness_map = WitnessMap::from(solved_witness);
