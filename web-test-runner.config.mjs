@@ -2,7 +2,7 @@ import { esbuildPlugin } from "@web/dev-server-esbuild";
 import { playwrightLauncher } from "@web/test-runner-playwright";
 
 export default {
-  browsers: [playwrightLauncher({ product: "chromium" })],
+  browsers: [playwrightLauncher({ product: "webkit" })],
   plugins: [
     esbuildPlugin({
       ts: true,
