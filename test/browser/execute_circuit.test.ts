@@ -1,4 +1,3 @@
-import { expect, test } from "@jest/globals";
 import initACVMSimulator, {
   abiEncode,
   abiDecode,
@@ -342,7 +341,5 @@ test("successfully executes a SchnorrVerify opcode", async () => {
   );
 
   const decoded_inputs = abiDecode(abi, solved_witness);
-  expect(BigInt(decoded_inputs.return_value).toString()).toBe(
-    1n.toString()
-  );
+  expect(BigInt(decoded_inputs.return_value).toString()).toBe(1n.toString());
 });

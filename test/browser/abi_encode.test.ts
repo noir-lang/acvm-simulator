@@ -1,4 +1,3 @@
-import { expect, test } from "@jest/globals";
 import initACVMSimulator, {
   abiEncode,
   abiDecode,
