@@ -1,26 +1,12 @@
-import { esbuildPlugin } from "@web/dev-server-esbuild";
-import { playwrightLauncher } from "@web/test-runner-playwright";
+import { esbuildPlugin } from '@web/dev-server-esbuild';
 
 export default {
-  browsers: [playwrightLauncher({ product: "chromium" })],
-  plugins: [
-    esbuildPlugin({
-      ts: true,
-    }),
-  ],
-  files: ["test/browser/**/*.test.ts"],
   nodeResolve: true,
-  testFramework: {
-    config: {
-      testTimeout: 40000,
-    },
-  },
-  testRunnerHtml: (testFramework) => `
-    <html>
-      <head>
-        <script type="module" src="${testFramework}"></script>
-        <script type="module">import 'jest-browser-globals';</script>
-      </head>
-    </html>
-  `,
+	testFramework: {
+		config: {
+			// ui: 'bdd',
+			timeout: '40000',
+		}
+	},
+  plugins: [esbuildPlugin({ ts: true })],
 };
