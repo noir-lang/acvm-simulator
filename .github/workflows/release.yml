@@ -24,7 +24,7 @@ jobs:
           extra-files: |
             Cargo.toml
             flake.nix
-  
+
   update-lockfile:
     name: Update lockfile
     needs: [release-please]

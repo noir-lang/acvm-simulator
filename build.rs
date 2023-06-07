@@ -1,5 +1,3 @@
-use std::env;
-
 const GIT_COMMIT: &&str = &"GIT_COMMIT";
 const BARRETENBERG_BIN_DIR: &&str = &"BARRETENBERG_BIN_DIR";
 
@@ -10,7 +8,7 @@ fn main() -> Result<(), String> {
         build_data::no_debug_rebuilds();
     }
 
-    match env::var(BARRETENBERG_BIN_DIR) {
+    match std::env::var(BARRETENBERG_BIN_DIR) {
         Ok(bindir) => {
             println!("cargo:rustc-env={BARRETENBERG_BIN_DIR}={bindir}");
             Ok(())
