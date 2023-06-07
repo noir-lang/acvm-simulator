@@ -12,8 +12,15 @@ export default {
   nodeResolve: true,
   testFramework: {
     config: {
-      ui: "bdd",
-      timeout: 40000,
+      testTimeout: 40000,
     },
   },
+  testRunnerHtml: (testFramework) => `
+    <html>
+      <head>
+        <script type="module" src="${testFramework}"></script>
+        <script type="module">import 'jest-browser-globals';</script>
+      </head>
+    </html>
+  `,
 };

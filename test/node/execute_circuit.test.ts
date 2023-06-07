@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect, test } from "@jest/globals";
 import {
   abiEncode,
   abiDecode,
@@ -7,7 +7,7 @@ import {
   OracleCallback,
 } from "../../result/";
 
-it("successfully executes circuit and extracts return value", async () => {
+test("successfully executes circuit and extracts return value", async () => {
   // Noir program which enforces that x != y and returns x + y.
   const abi = {
     parameters: [
@@ -71,17 +71,17 @@ it("successfully executes circuit and extracts return value", async () => {
 
   // Solved witness should be consistent with initial witness
   initial_witness.forEach((value, key) => {
-    expect(solved_witness.get(key) as string).to.be.eq(value);
+    expect(solved_witness.get(key) as string).toBe(value);
   });
   // Solved witness should contain expected return value
-  expect(BigInt(solved_witness.get(return_witness) as string)).to.be.eq(3n);
+  expect(BigInt(solved_witness.get(return_witness) as string)).toBe(3n);
 
   const decoded_inputs = abiDecode(abi, solved_witness);
 
-  expect(BigInt(decoded_inputs.return_value)).to.be.eq(3n);
+  expect(BigInt(decoded_inputs.return_value)).toBe(3n);
 });
 
-it("successfully processes oracle opcodes", async () => {
+test("successfully processes oracle opcodes", async () => {
   // We use a handwritten circuit which uses an oracle to calculate the sum of witnesses 1 and 2
   // and stores the result in witness 3. This is then enforced by an arithmetic opcode to check the result is correct.
 
@@ -158,22 +158,20 @@ it("successfully processes oracle opcodes", async () => {
   );
 
   // Check that expected values were passed to oracle callback.
-  expect(observedName).to.be.eq("example_oracle");
-  expect(observedInputs).to.be.deep.eq([
+  expect(observedName).toBe("example_oracle");
+  expect(observedInputs).toStrictEqual([
     initial_witness.get(1) as string,
     initial_witness.get(2) as string,
   ]);
 
   // If incorrect value is written into circuit then execution should halt due to unsatisfied constraint in
   // arithmetic opcode. Nevertheless, check that returned value was inserted correctly.
-  expect(solved_witness.get(3) as string).to.be.eq(
+  expect(solved_witness.get(3) as string).toBe(
     "0x0000000000000000000000000000000000000000000000000000000000000002"
   );
 });
 
-it("successfully executes a Pedersen opcode", async function () {
-  this.timeout(10000);
-
+test("successfully executes a Pedersen opcode", async () => {
   // let pedersen = Opcode::BlackBoxFuncCall(BlackBoxFuncCall {
   //     name: crate::BlackBoxFunc::Pedersen,
   //     inputs: vec![FunctionInput {
@@ -223,10 +221,10 @@ it("successfully executes a Pedersen opcode", async function () {
     "0x24f50d25508b4dfb1e8a834e39565f646e217b24cb3a475c2e4991d1bb07a9d8",
   ];
 
-  expect(decoded_inputs.return_value).to.be.deep.eq(expectedResult);
+  expect(decoded_inputs.return_value).toStrictEqual(expectedResult);
 });
 
-it("successfully executes a FixedBaseScalarMul opcode", async () => {
+test("successfully executes a FixedBaseScalarMul opcode", async () => {
   // let fixed_base_scalar_mul = Opcode::BlackBoxFuncCall(BlackBoxFuncCall {
   //     name: crate::BlackBoxFunc::FixedBaseScalarMul,
   //     inputs: vec![FunctionInput {
@@ -276,10 +274,10 @@ it("successfully executes a FixedBaseScalarMul opcode", async () => {
     "0x0000000000000002cf135e7506a45d632d270d45f1181294833fc48d823f272c",
   ];
 
-  expect(decoded_inputs.return_value).to.be.deep.eq(expectedResult);
+  expect(decoded_inputs.return_value).toStrictEqual(expectedResult);
 });
 
-it("successfully executes a SchnorrVerify opcode", async () => {
+test("successfully executes a SchnorrVerify opcode", async () => {
   // let pub_x = FunctionInput { witness: Witness(1), num_bits: FieldElement::max_num_bits() };
   // let pub_y = FunctionInput { witness: Witness(2), num_bits: FieldElement::max_num_bits() };
   // let signature_inputs =
@@ -387,5 +385,5 @@ it("successfully executes a SchnorrVerify opcode", async () => {
   );
 
   const decoded_inputs = abiDecode(abi, solved_witness);
-  expect(BigInt(decoded_inputs.return_value)).to.be.eq(1n);
+  expect(BigInt(decoded_inputs.return_value)).toBe(1n);
 });
