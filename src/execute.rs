@@ -53,8 +53,9 @@ impl PartialWitnessGenerator for SimulatedBackend {
         let signature_bytes: Vec<u8> = signature
             .iter()
             .map(|sig_elem| {
-                let witness_value = *witness_to_value(initial_witness, sig_elem.witness)?;
-                witness_value.to_be_bytes().last().expect("byte array is never empty")
+                witness_to_value(initial_witness, sig_elem.witness).map(|witness_value| {
+                    *witness_value.to_be_bytes().last().expect("byte array is never empty")
+                })
             })
             .collect::<Result<_, _>>()?;
 
@@ -74,25 +75,26 @@ impl PartialWitnessGenerator for SimulatedBackend {
         let message_bytes: Vec<u8> = message
             .iter()
             .map(|message_elem| {
-                let witness_value = *witness_to_value(initial_witness, message_elem.witness)?;
-                witness_value.to_be_bytes().last().expect("byte array is never empty")
+                witness_to_value(initial_witness, message_elem.witness).map(|witness_value| {
+                    *witness_value.to_be_bytes().last().expect("byte array is never empty")
+                })
             })
             .collect::<Result<_, _>>()?;
 
-        let validsignature = self
+        let valid_signature = self
             .blackbox_vendor
-            .verifysignature(pub_key, sig_s, sig_e, &message_bytes)
+            .verify_signature(pub_key, sig_s, sig_e, &message_bytes)
             .map_err(|err| {
                 OpcodeResolutionError::BlackBoxFunctionFailed(
                     BlackBoxFunc::SchnorrVerify,
                     err.to_string(),
                 )
             })?;
-        if !validsignature {
+        if !valid_signature {
             dbg!("signature has failed to verify");
         }
 
-        initial_witness.insert(*output, FieldElement::from(validsignature));
+        initial_witness.insert(*output, FieldElement::from(valid_signature));
         Ok(OpcodeResolution::Solved)
     }
 
