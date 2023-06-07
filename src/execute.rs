@@ -102,7 +102,8 @@ impl PartialWitnessGenerator for SimulatedBackend {
         &self,
         initial_witness: &mut WitnessMap,
         inputs: &[FunctionInput],
-        domain_separator: u32,
+        // Assumed to be `0`
+        _domain_separator: u32,
         outputs: &[Witness],
     ) -> Result<OpcodeResolution, OpcodeResolutionError> {
         let scalars: Result<Vec<_>, _> =
