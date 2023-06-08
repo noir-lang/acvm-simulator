@@ -11,7 +11,6 @@ it("successfully executes circuit and extracts return value", async () => {
   const { abi, bytecode, inputs, expectedResult } = await import(
     "../shared/noir_program"
   );
-  const return_witness: number = abi.return_witnesses[0];
 
   const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
   const solved_witness: WitnessMap = await executeCircuit(
@@ -26,12 +25,13 @@ it("successfully executes circuit and extracts return value", async () => {
   initial_witness.forEach((value, key) => {
     expect(solved_witness.get(key) as string).to.be.eq(value);
   });
+
   // Solved witness should contain expected return value
-  expect(BigInt(solved_witness.get(return_witness) as string)).to.be.eq(3n);
+  const return_witness: number = abi.return_witnesses[0];
+  expect(solved_witness.get(return_witness)).to.be.eq(expectedResult);
 
   const decoded_inputs = abiDecode(abi, solved_witness);
-
-  expect(BigInt(decoded_inputs.return_value)).to.be.eq(expectedResult);
+  expect(decoded_inputs.return_value).to.be.eq(expectedResult);
 });
 
 it("successfully processes oracle opcodes", async () => {

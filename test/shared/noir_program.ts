@@ -33,4 +33,5 @@ export const inputs = {
   y: "2",
 };
 
-export const expectedResult = 3n;
+export const expectedResult =
+  "0x0000000000000000000000000000000000000000000000000000000000000003";

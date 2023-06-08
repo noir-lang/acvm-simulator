@@ -13,8 +13,6 @@ it("successfully executes circuit and extracts return value", async () => {
   );
   await initACVMSimulator();
 
-  const return_witness: number = abi.return_witnesses[0];
-
   const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
   const solved_witness: WitnessMap = await executeCircuit(
     bytecode,
@@ -29,9 +27,8 @@ it("successfully executes circuit and extracts return value", async () => {
     expect(solved_witness.get(key) as string).to.equal(value);
   });
   // Solved witness should contain expected return value
-  expect(BigInt(solved_witness.get(return_witness) as string)).to.equal(
-    expectedResult
-  );
+  const return_witness: number = abi.return_witnesses[0];
+  expect(solved_witness.get(return_witness)).to.equal(expectedResult);
 
   const decoded_inputs = abiDecode(abi, solved_witness);
 
