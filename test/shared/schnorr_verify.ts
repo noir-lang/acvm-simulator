@@ -81,4 +81,5 @@ export const inputs = {
   msg: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
 };
 
-export const expectedResult = 1n;
+export const expectedResult =
+  "0x0000000000000000000000000000000000000000000000000000000000000003";

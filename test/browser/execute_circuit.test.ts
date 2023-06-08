@@ -32,7 +32,7 @@ it("successfully executes circuit and extracts return value", async () => {
 
   const decoded_inputs = abiDecode(abi, solved_witness);
 
-  expect(BigInt(decoded_inputs.return_value)).to.equal(expectedResult);
+  expect(decoded_inputs.return_value).to.equal(expectedResult);
 });
 
 it("successfully processes oracle opcodes", async () => {
@@ -136,5 +136,5 @@ it("successfully executes a SchnorrVerify opcode", async () => {
   );
 
   const decoded_inputs = abiDecode(abi, solved_witness);
-  expect(BigInt(decoded_inputs.return_value)).to.be.eq(expectedResult);
+  expect(decoded_inputs.return_value).to.be.eq(expectedResult);
 });

@@ -129,5 +129,5 @@ it("successfully executes a SchnorrVerify opcode", async () => {
   );
 
   const decoded_inputs = abiDecode(abi, solved_witness);
-  expect(BigInt(decoded_inputs.return_value)).to.be.eq(expectedResult);
+  expect(decoded_inputs.return_value).to.be.eq(expectedResult);
 });
