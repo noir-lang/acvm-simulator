@@ -7,44 +7,15 @@ import {
   OracleCallback,
 } from "../../result/";
 
-import {
-  abi as noirAbi,
-  bytecode as noirBytecode,
-  inputs as noirInputs,
-  expectedResult as noirResult,
-} from "../shared/noir_program";
-import {
-  bytecode as oracleBytecode,
-  initialWitnessMap as oracleInitialWitnessMap,
-  expectedWitnessMap as oracleExpectedWitnessMap,
-  oracleResponse,
-  oracleCallName,
-} from "../shared/oracle";
-import {
-  abi as pedersenAbi,
-  bytecode as pedersenBytecode,
-  inputs as pedersenInputs,
-  expectedResult as pedersenResult,
-} from "../shared/pedersen";
-import {
-  abi as fixedBaseScalarMulAbi,
-  bytecode as fixedBaseScalarMulBytecode,
-  inputs as fixedBaseScalarMulInputs,
-  expectedResult as fixedBaseScalarMulResult,
-} from "../shared/fixed_base_scalar_mul";
-import {
-  abi as schnorrVerifyAbi,
-  bytecode as schnorrVerifyBytecode,
-  inputs as schnorrVerifyInputs,
-  expectedResult as schnorrVerifyResult,
-} from "../shared/schnorr_verify";
-
 it("successfully executes circuit and extracts return value", async () => {
-  const return_witness: number = noirAbi.return_witnesses[0];
+  const { abi, bytecode, inputs, expectedResult } = await import(
+    "../shared/noir_program"
+  );
+  const return_witness: number = abi.return_witnesses[0];
 
-  const initial_witness: WitnessMap = abiEncode(noirAbi, noirInputs, null);
+  const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
   const solved_witness: WitnessMap = await executeCircuit(
-    noirBytecode,
+    bytecode,
     initial_witness,
     () => {
       throw Error("unexpected oracle");
@@ -58,12 +29,20 @@ it("successfully executes circuit and extracts return value", async () => {
   // Solved witness should contain expected return value
   expect(BigInt(solved_witness.get(return_witness) as string)).to.be.eq(3n);
 
-  const decoded_inputs = abiDecode(noirAbi, solved_witness);
+  const decoded_inputs = abiDecode(abi, solved_witness);
 
-  expect(BigInt(decoded_inputs.return_value)).to.be.eq(noirResult);
+  expect(BigInt(decoded_inputs.return_value)).to.be.eq(expectedResult);
 });
 
 it("successfully processes oracle opcodes", async () => {
+  const {
+    bytecode,
+    initialWitnessMap,
+    expectedWitnessMap,
+    oracleResponse,
+    oracleCallName,
+  } = await import("../shared/oracle");
+
   let observedName = "";
   let observedInputs: string[] = [];
   const oracleCallback: OracleCallback = async (
@@ -79,77 +58,76 @@ it("successfully processes oracle opcodes", async () => {
     return [oracleResponse];
   };
   const solved_witness: WitnessMap = await executeCircuit(
-    oracleBytecode,
-    oracleInitialWitnessMap,
+    bytecode,
+    initialWitnessMap,
     oracleCallback
   );
 
   // Check that expected values were passed to oracle callback.
   expect(observedName).to.be.eq(oracleCallName);
   expect(observedInputs).to.be.deep.eq([
-    oracleInitialWitnessMap.get(1) as string,
-    oracleInitialWitnessMap.get(2) as string,
+    initialWitnessMap.get(1) as string,
+    initialWitnessMap.get(2) as string,
   ]);
 
   // If incorrect value is written into circuit then execution should halt due to unsatisfied constraint in
   // arithmetic opcode. Nevertheless, check that returned value was inserted correctly.
-  expect(solved_witness).to.be.deep.eq(oracleExpectedWitnessMap);
+  expect(solved_witness).to.be.deep.eq(expectedWitnessMap);
 });
 
 it("successfully executes a Pedersen opcode", async function () {
   this.timeout(10000);
-
-  const initial_witness: WitnessMap = abiEncode(
-    pedersenAbi,
-    pedersenInputs,
-    null
+  const { abi, bytecode, inputs, expectedResult } = await import(
+    "../shared/pedersen"
   );
+
+  const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
   const solved_witness: WitnessMap = await executeCircuit(
-    pedersenBytecode,
+    bytecode,
     initial_witness,
     () => {
       throw Error("unexpected oracle");
     }
   );
 
-  const decoded_inputs = abiDecode(pedersenAbi, solved_witness);
+  const decoded_inputs = abiDecode(abi, solved_witness);
 
-  expect(decoded_inputs.return_value).to.be.deep.eq(pedersenResult);
+  expect(decoded_inputs.return_value).to.be.deep.eq(expectedResult);
 });
 
 it("successfully executes a FixedBaseScalarMul opcode", async () => {
-  const initial_witness: WitnessMap = abiEncode(
-    fixedBaseScalarMulAbi,
-    fixedBaseScalarMulInputs,
-    null
+  const { abi, bytecode, inputs, expectedResult } = await import(
+    "../shared/fixed_base_scalar_mul"
   );
+
+  const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
   const solved_witness: WitnessMap = await executeCircuit(
-    fixedBaseScalarMulBytecode,
+    bytecode,
     initial_witness,
     () => {
       throw Error("unexpected oracle");
     }
   );
 
-  const decoded_inputs = abiDecode(fixedBaseScalarMulAbi, solved_witness);
+  const decoded_inputs = abiDecode(abi, solved_witness);
 
-  expect(decoded_inputs.return_value).to.be.deep.eq(fixedBaseScalarMulResult);
+  expect(decoded_inputs.return_value).to.be.deep.eq(expectedResult);
 });
 
 it("successfully executes a SchnorrVerify opcode", async () => {
-  const initial_witness: WitnessMap = abiEncode(
-    schnorrVerifyAbi,
-    schnorrVerifyInputs,
-    null
+  const { abi, bytecode, inputs, expectedResult } = await import(
+    "../shared/schnorr_verify"
   );
+
+  const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
   const solved_witness: WitnessMap = await executeCircuit(
-    schnorrVerifyBytecode,
+    bytecode,
     initial_witness,
     () => {
       throw Error("unexpected oracle");
     }
   );
 
-  const decoded_inputs = abiDecode(schnorrVerifyAbi, solved_witness);
-  expect(BigInt(decoded_inputs.return_value)).to.be.eq(schnorrVerifyResult);
+  const decoded_inputs = abiDecode(abi, solved_witness);
+  expect(BigInt(decoded_inputs.return_value)).to.be.eq(expectedResult);
 });
