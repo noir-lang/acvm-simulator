@@ -202,7 +202,7 @@ async fn process_oracle_calls(
 
     // Insert results into the witness map
     for oracle_call_future in oracle_call_futures {
-        let resolved_oracle_call: OracleData = oracle_call_future.await.unwrap();
+        let resolved_oracle_call: OracleData = oracle_call_future.await?;
         for (i, witness_index) in resolved_oracle_call.outputs.iter().enumerate() {
             insert_value(witness_index, resolved_oracle_call.output_values[i], witness_map)
                 .map_err(|err| err.to_string())?;
@@ -235,7 +235,7 @@ async fn process_brillig_calls(
     for (foreign_call, foreign_call_future) in
         brillig_foreign_calls.into_iter().zip(foreign_call_futures.into_iter())
     {
-        let foreign_call_result = foreign_call_future.await.unwrap();
+        let foreign_call_result = foreign_call_future.await?;
 
         let mut new_brillig = foreign_call.brillig;
         new_brillig.foreign_call_results.push(foreign_call_result);
