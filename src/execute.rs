@@ -193,7 +193,7 @@ async fn process_oracle_calls(
     // Perform all oracle queries
     let oracle_call_futures: Vec<_> = unresolved_oracle_calls
         .into_iter()
-        .map(|oracle_call| resolve_oracle(&oracle_callback, oracle_call))
+        .map(|oracle_call| resolve_oracle(oracle_callback, oracle_call))
         .collect();
 
     // Insert results into the witness map
