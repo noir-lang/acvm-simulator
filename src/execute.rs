@@ -184,6 +184,7 @@ pub async fn execute_circuit(
     Ok(witness_map.into())
 }
 
+/// Peforms the foreign calls associated with [`unresolved_oracle_calls`][OracleData] and writes the results to [`witness_map`][WitnessMap].
 async fn process_oracle_calls(
     witness_map: &mut WitnessMap,
     oracle_callback: &OracleCallback,
