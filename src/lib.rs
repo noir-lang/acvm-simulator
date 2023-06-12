@@ -11,6 +11,7 @@ use wasm_bindgen::prelude::*;
 mod abi;
 mod barretenberg;
 mod execute;
+mod foreign_calls;
 mod js_transforms;
 mod public_witness;
 
