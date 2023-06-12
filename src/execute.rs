@@ -2,14 +2,14 @@ use acvm::{
     acir::{
         circuit::{
             opcodes::{FunctionInput, OracleData},
-            Circuit,
+            Circuit, Opcode,
         },
         native_types::{Witness, WitnessMap},
         BlackBoxFunc,
     },
     pwg::{
         block::Blocks, witness_to_value, OpcodeResolution, OpcodeResolutionError,
-        PartialWitnessGeneratorStatus,
+        PartialWitnessGeneratorStatus, UnresolvedBrilligCall,
     },
     FieldElement, PartialWitnessGenerator,
 };
@@ -18,7 +18,7 @@ use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 use crate::{
     barretenberg::{pedersen::Pedersen, scalar_mul::ScalarMul, schnorr::SchnorrSig, Barretenberg},
-    foreign_calls::{resolve_oracle, OracleCallback},
+    foreign_calls::{resolve_brillig, resolve_oracle, OracleCallback},
     JsWitnessMap,
 };
 
@@ -168,15 +168,19 @@ pub async fn execute_circuit(
             PartialWitnessGeneratorStatus::RequiresOracleData {
                 required_oracle_data,
                 unsolved_opcodes,
-                unresolved_brillig_calls: _,
+                unresolved_brillig_calls,
             } => {
+                // Oracle calls write their results directly into `witness_map`.
                 process_oracle_calls(&mut witness_map, &oracle_callback, required_oracle_data)
                     .await?;
 
-                // TODO: add handling for `Brillig` opcodes.
+                // Brillig calls return a new set of opcodes which need to be executed.
+                let new_brillig_opcodes: Vec<Opcode> =
+                    process_brillig_calls(&oracle_callback, unresolved_brillig_calls).await?;
 
                 // Use new opcodes as returned by ACVM.
                 opcodes = unsolved_opcodes;
+                opcodes.extend(new_brillig_opcodes);
             }
         }
     }
@@ -206,6 +210,39 @@ async fn process_oracle_calls(
     }
 
     Ok(())
+}
+
+/// Peforms the foreign calls associated with [`brillig_foreign_calls`][UnresolvedBrilligCall] and returns a vector of updated
+/// [Brillig][acvm::acir::circuit::brillig::Brillig] to execute.
+async fn process_brillig_calls(
+    foreign_call_callback: &OracleCallback,
+    brillig_foreign_calls: Vec<UnresolvedBrilligCall>,
+) -> Result<Vec<Opcode>, String> {
+    // Pull out foreign call args (necessary to satisfy the borrow checker).
+    let foreign_call_wait_infos: Vec<_> = brillig_foreign_calls
+        .iter()
+        .map(|foreign_call| foreign_call.foreign_call_wait_info.clone())
+        .collect();
+
+    // Perform all foreign calls.
+    let foreign_call_futures: Vec<_> = foreign_call_wait_infos
+        .iter()
+        .map(|wait_info| resolve_brillig(foreign_call_callback, wait_info))
+        .collect();
+
+    // Apply results to Brillig opcodes.
+    let mut updated_brillig_opcodes = Vec::with_capacity(brillig_foreign_calls.len());
+    for (foreign_call, foreign_call_future) in
+        brillig_foreign_calls.into_iter().zip(foreign_call_futures.into_iter())
+    {
+        let foreign_call_result = foreign_call_future.await.unwrap();
+
+        let mut new_brillig = foreign_call.brillig;
+        new_brillig.foreign_call_results.push(foreign_call_result);
+        updated_brillig_opcodes.push(Opcode::Brillig(new_brillig));
+    }
+
+    Ok(updated_brillig_opcodes)
 }
 
 fn insert_value(

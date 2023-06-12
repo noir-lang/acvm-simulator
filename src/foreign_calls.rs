@@ -1,9 +1,16 @@
-use acvm::{acir::circuit::opcodes::OracleData, FieldElement};
+use acvm::{
+    acir::{
+        brillig_vm::{ForeignCallResult, Value},
+        circuit::opcodes::OracleData,
+    },
+    pwg::brillig::ForeignCallWaitInfo,
+    FieldElement,
+};
 
 use js_sys::JsString;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
-use crate::js_transforms::{js_value_to_field_element, field_element_to_js_string};
+use crate::js_transforms::{field_element_to_js_string, js_value_to_field_element};
 
 #[wasm_bindgen(typescript_custom_section)]
 const ORACLE_CALLBACK: &'static str = r#"
@@ -47,6 +54,22 @@ pub(super) async fn resolve_oracle(
     Ok(unresolved_oracle_call)
 }
 
+pub(super) async fn resolve_brillig(
+    foreign_call_callback: &OracleCallback,
+    foreign_call_wait_info: &ForeignCallWaitInfo,
+) -> Result<ForeignCallResult, String> {
+    // Prepare to call
+    let (name, inputs) = prepare_brillig_args(&foreign_call_wait_info);
+
+    // Perform foreign call
+    let outputs = perform_foreign_call(foreign_call_callback, name, inputs).await?;
+
+    // The Brillig VM checks that the number of return values from
+    // the foreign call is valid so we don't need to do it here.
+    let values = outputs.into_iter().map(Value::from).collect();
+    Ok(ForeignCallResult { values })
+}
+
 fn prepare_oracle_args(unresolved_oracle_call: &OracleData) -> (JsString, js_sys::Array) {
     let name = JsString::from(unresolved_oracle_call.name.clone());
 
@@ -59,6 +82,18 @@ fn prepare_oracle_args(unresolved_oracle_call: &OracleData) -> (JsString, js_sys
     assert_eq!(unresolved_oracle_call.inputs.len(), unresolved_oracle_call.input_values.len());
 
     (name, inputs)
+}
+
+fn prepare_brillig_args(brillig_call_info: &ForeignCallWaitInfo) -> (JsString, js_sys::Array) {
+    let function = JsString::from(brillig_call_info.function.clone());
+
+    let inputs = js_sys::Array::default();
+    for input in &brillig_call_info.inputs {
+        let hex_js_string = field_element_to_js_string(&input.to_field());
+        inputs.push(&hex_js_string);
+    }
+
+    (function, inputs)
 }
 
 async fn perform_foreign_call(
