@@ -59,7 +59,7 @@ pub(super) async fn resolve_brillig(
     foreign_call_wait_info: &ForeignCallWaitInfo,
 ) -> Result<ForeignCallResult, String> {
     // Prepare to call
-    let (name, inputs) = prepare_brillig_args(&foreign_call_wait_info);
+    let (name, inputs) = prepare_brillig_args(foreign_call_wait_info);
 
     // Perform foreign call
     let outputs = perform_foreign_call(foreign_call_callback, name, inputs).await?;
