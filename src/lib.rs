@@ -10,6 +10,7 @@ use wasm_bindgen::prelude::*;
 
 mod abi;
 mod barretenberg;
+pub mod blackbox;
 mod compression;
 mod execute;
 mod foreign_calls;

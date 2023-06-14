@@ -2337,3 +2337,8 @@ dependencies = [
  "quote",
  "syn 2.0.18",
 ]
+
+[[patch.unused]]
+name = "acvm"
+version = "0.14.2"
+source = "git+https://github.com/noir-lang/acvm?rev=5f166abe7f2acde9175c793e067f6d254189aef5#5f166abe7f2acde9175c793e067f6d254189aef5"

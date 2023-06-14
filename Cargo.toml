@@ -43,3 +43,7 @@ pkg-config = "0.3"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.36"
+
+
+[patch.crates-io]
+acvm = { git = "https://github.com/noir-lang/acvm", rev = "5f166abe7f2acde9175c793e067f6d254189aef5" }
