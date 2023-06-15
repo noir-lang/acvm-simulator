@@ -198,7 +198,9 @@ it("successfully executes a pedersen hash", async () => {
     "0x24f50d25508b4dfb1e8a834e39565f646e217b24cb3a475c2e4991d1bb07a9d8",
   ];
 
-  return expect(decoded_inputs.return_value).to.have.same.members(expectedResult);
+  return expect(decoded_inputs.return_value).to.have.same.members(
+    expectedResult
+  );
 });
 
 it("successfully executes a FixedBaseScalarMul opcode", async () => {
@@ -313,5 +315,7 @@ it("successfully executes a SchnorrVerify opcode", async () => {
   );
 
   const decoded_inputs = abiDecode(abi, solved_witness);
-  expect(BigInt(decoded_inputs.return_value).toString()).to.be.equal(1n.toString());
+  expect(BigInt(decoded_inputs.return_value).toString()).to.be.equal(
+    1n.toString()
+  );
 });
