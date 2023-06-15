@@ -8,7 +8,7 @@ use acvm::{
         BlackBoxFunc,
     },
     pwg::{
-        block::Blocks, witness_to_value, OpcodeResolution, OpcodeResolutionError,
+        witness_to_value, Blocks, OpcodeResolution, OpcodeResolutionError,
         PartialWitnessGeneratorStatus,
     },
     FieldElement, PartialWitnessGenerator,
