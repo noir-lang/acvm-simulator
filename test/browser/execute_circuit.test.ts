@@ -5,10 +5,18 @@ import initACVMSimulator, {
   executeCircuit,
   WitnessMap,
   OracleCallback,
+  init_log_level,
 } from "../../result/";
 
-it("successfully executes circuit and extracts return value", async () => {
+beforeEach(async () => {
+
   await initACVMSimulator();
+
+  init_log_level("INFO");
+});
+
+it("successfully executes circuit and extracts return value", async () => {
+  
 
   // fn main(x : Field, y : pub Field) -> pub Field {
   //   assert(x != y);
@@ -68,7 +76,7 @@ it("successfully executes circuit and extracts return value", async () => {
 });
 
 it("successfully processes oracle opcodes", async () => {
-  await initACVMSimulator();
+  // await initACVMSimulator();
 
   // We use a handwritten circuit which uses an oracle to calculate the sum of witnesses 1 and 2
   // and stores the result in witness 3. This is then enforced by an arithmetic opcode to check the result is correct.
@@ -153,7 +161,6 @@ it("successfully processes oracle opcodes", async () => {
 });
 
 it("successfully executes a pedersen hash", async () => {
-  await initACVMSimulator();
 
   const abi = {
     parameters: [{ name: "x", type: { kind: "field" }, visibility: "private" }],
@@ -173,7 +180,9 @@ it("successfully executes a pedersen hash", async () => {
     x: "1",
   };
 
+  
   const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
+  
   const solved_witness: WitnessMap = await executeCircuit(
     bytecode,
     initial_witness,
@@ -193,7 +202,6 @@ it("successfully executes a pedersen hash", async () => {
 });
 
 it("successfully executes a FixedBaseScalarMul opcode", async () => {
-  await initACVMSimulator();
 
   const abi = {
     parameters: [{ name: "x", type: { kind: "field" }, visibility: "private" }],
@@ -234,7 +242,7 @@ it("successfully executes a FixedBaseScalarMul opcode", async () => {
 });
 
 it("successfully executes a SchnorrVerify opcode", async () => {
-  await initACVMSimulator();
+  
 
   const abi = {
     parameters: [

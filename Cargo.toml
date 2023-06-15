@@ -34,8 +34,8 @@ rust-embed = { version = "6.6.0", features = [
     "interpolate-folder-path",
     "include-exclude",
 ] }
-wasmer = { version = "3.3", default-features = false, features = [ "js-default" ] }
-
+wasmer = { version = "3.3", default-features = false, features = [ "js-default"] }
+wasmer-types = { version = "3.3" } 
 
 [build-dependencies]
 build-data = "0.1.3"
@@ -43,3 +43,7 @@ pkg-config = "0.3"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.36"
+
+[patch.crates-io]
+wasmer = { path = "/Users/koby/git/wasmer/lib/api" }
+wasmer-types = { path = "/Users/koby/git/wasmer/lib/types" }

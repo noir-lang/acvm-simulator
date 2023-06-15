@@ -22,9 +22,15 @@ use crate::{
     JsWitnessMap,
 };
 
-#[derive(Default)]
 struct SimulatedBackend {
     blackbox_vendor: Barretenberg,
+}
+
+impl SimulatedBackend {
+    async fn initialize() -> SimulatedBackend {
+        let blackbox_vendor = Barretenberg::new().await;
+        SimulatedBackend { blackbox_vendor }
+    }
 }
 
 impl PartialWitnessGenerator for SimulatedBackend {
@@ -173,7 +179,8 @@ pub async fn execute_circuit(
     let circuit: Circuit = Circuit::read(&*circuit).expect("Failed to deserialize circuit");
     let mut witness_map = WitnessMap::from(initial_witness);
 
-    let backend = SimulatedBackend::default();
+    // let backend = SimulatedBackend::default();
+    let backend = SimulatedBackend::initialize().await;
     let mut blocks = Blocks::default();
     let mut opcodes = circuit.opcodes;
 
