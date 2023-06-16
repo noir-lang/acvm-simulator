@@ -9,15 +9,12 @@ import initACVMSimulator, {
 } from "../../result/";
 
 beforeEach(async () => {
-
   await initACVMSimulator();
 
   init_log_level("INFO");
 });
 
 it("successfully executes circuit and extracts return value", async () => {
-  
-
   // fn main(x : Field, y : pub Field) -> pub Field {
   //   assert(x != y);
   //   x + y
@@ -161,7 +158,6 @@ it("successfully processes oracle opcodes", async () => {
 });
 
 it("successfully executes a pedersen hash", async () => {
-
   const abi = {
     parameters: [{ name: "x", type: { kind: "field" }, visibility: "private" }],
     param_witnesses: {
@@ -180,9 +176,8 @@ it("successfully executes a pedersen hash", async () => {
     x: "1",
   };
 
-  
   const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
-  
+
   const solved_witness: WitnessMap = await executeCircuit(
     bytecode,
     initial_witness,
@@ -204,7 +199,6 @@ it("successfully executes a pedersen hash", async () => {
 });
 
 it("successfully executes a FixedBaseScalarMul opcode", async () => {
-
   const abi = {
     parameters: [{ name: "x", type: { kind: "field" }, visibility: "private" }],
     param_witnesses: {
@@ -244,8 +238,6 @@ it("successfully executes a FixedBaseScalarMul opcode", async () => {
 });
 
 it("successfully executes a SchnorrVerify opcode", async () => {
-  
-
   const abi = {
     parameters: [
       { name: "x", type: { kind: "field" }, visibility: "private" },
