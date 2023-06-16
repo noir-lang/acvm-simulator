@@ -71,7 +71,6 @@ dependencies = [
  "wasm-bindgen-test",
  "wasm-logger",
  "wasmer",
- "wasmer-types",
 ]
 
 [[package]]

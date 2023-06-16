@@ -35,7 +35,6 @@ rust-embed = { version = "6.6.0", features = [
     "include-exclude",
 ] }
 wasmer = { version = "3.3", default-features = false, features = [ "js-default"] }
-wasmer-types = { version = "3.3" } 
 
 [build-dependencies]
 build-data = "0.1.3"
