@@ -942,7 +942,7 @@ dependencies = [
 [[package]]
 name = "iter-extended"
 version = "0.6.0"
-source = "git+https://github.com/noir-lang/noir?rev=34c3f2a328a4731eac77a962b3e56f4a7836e6bf#34c3f2a328a4731eac77a962b3e56f4a7836e6bf"
+source = "git+https://github.com/noir-lang/noir?rev=3109239f2c0a7ad4767a3cd1bcc4436a367a8860#3109239f2c0a7ad4767a3cd1bcc4436a367a8860"
 
 [[package]]
 name = "itertools"
@@ -1095,7 +1095,7 @@ checksum = "7843ec2de400bcbc6a6328c958dc38e5359da6e93e72e37bc5246bf1ae776389"
 [[package]]
 name = "noirc_abi"
 version = "0.6.0"
-source = "git+https://github.com/noir-lang/noir?rev=34c3f2a328a4731eac77a962b3e56f4a7836e6bf#34c3f2a328a4731eac77a962b3e56f4a7836e6bf"
+source = "git+https://github.com/noir-lang/noir?rev=3109239f2c0a7ad4767a3cd1bcc4436a367a8860#3109239f2c0a7ad4767a3cd1bcc4436a367a8860"
 dependencies = [
  "acvm",
  "iter-extended",
