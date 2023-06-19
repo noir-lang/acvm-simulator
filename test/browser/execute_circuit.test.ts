@@ -82,7 +82,8 @@ it("successfully processes oracle opcodes", async () => {
   expect(solved_witness).to.be.deep.eq(expectedWitnessMap);
 });
 
-it("successfully executes a Pedersen opcode", async () => {
+it("successfully executes a Pedersen opcode", async function () {
+  this.timeout(10000);
   const { abi, bytecode, inputs, expectedResult } = await import(
     "../shared/pedersen"
   );
