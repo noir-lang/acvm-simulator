@@ -158,7 +158,6 @@ pub async fn execute_circuit(
     let circuit: Circuit = Circuit::read(&*circuit).expect("Failed to deserialize circuit");
     let mut witness_map = WitnessMap::from(initial_witness);
 
-    // let backend = SimulatedBackend::default();
     let backend = SimulatedBackend::initialize().await;
     let mut blocks = Blocks::default();
     let mut opcodes = circuit.opcodes;
