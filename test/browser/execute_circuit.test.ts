@@ -40,7 +40,6 @@ it("successfully executes circuit and extracts return value", async () => {
   expect(decoded_inputs.return_value).to.equal(expectedResult);
 });
 
-
 it("successfully executes a Pedersen opcode", async function () {
   this.timeout(10000);
   const { abi, bytecode, inputs, expectedResult } = await import(
