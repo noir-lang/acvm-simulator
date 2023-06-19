@@ -5,6 +5,7 @@
         //
         "blackbox",
         "bindir",
+        "brillig",
         "cout",
         "jsdoc",
         "keccak",
