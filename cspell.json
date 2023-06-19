@@ -24,6 +24,7 @@
         "ESUCCESS",
         "fdstat",
         "getrandom",
+        "jsvalue",
         "logstr",
         "plookup",
         "wasi",
