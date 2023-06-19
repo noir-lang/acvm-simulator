@@ -4,7 +4,7 @@ import {
   abiDecode,
   executeCircuit,
   WitnessMap,
-  ForeignCallHandler
+  ForeignCallHandler,
 } from "../../result/";
 
 it("successfully executes circuit and extracts return value", async () => {
