@@ -36,7 +36,7 @@ pub(crate) enum FeatureError {
     #[error("Value expected to be 0 or 1 representing a boolean")]
     InvalidBool,
     #[error("Black Box vendor Instance creation failed")]
-    BlackaBoxInstanceFailed,
+    BlackBoxInstanceFailed,
 }
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
@@ -56,13 +56,13 @@ pub(crate) struct Barretenberg {
 }
 
 mod wasm {
+    use js_sys::WebAssembly::{self};
+    use log::debug;
     use std::cell::RefCell;
-    use js_sys::{WebAssembly::{self}};
-    use log::{debug};
-    
+
     use wasmer::{
-        imports, Function, FunctionEnv, FunctionEnvMut, Instance, Memory, MemoryType,
-        Store, Value, WasmPtr, AsJs,
+        imports, AsJs, Function, FunctionEnv, FunctionEnvMut, Instance, Memory, MemoryType, Store,
+        Value, WasmPtr,
     };
 
     use super::{Barretenberg, Error, FeatureError};
@@ -225,7 +225,7 @@ mod wasm {
         /// Creates a pointer and allocates the bytes that the pointer references to, to the heap
         pub(crate) fn allocate(&self, bytes: &[u8]) -> Result<WASMValue, Error> {
             let ptr: i32 = self.call("bbmalloc", &bytes.len().into())?.try_into()?;
-            
+
             let i32_bytes = ptr.to_be_bytes();
             let u32_bytes = u32::from_be_bytes(i32_bytes);
 
@@ -241,7 +241,7 @@ mod wasm {
 
     async fn instance_load() -> (Instance, Memory, Store) {
         debug!("> Will Load black box functions vendor binary");
-        let mut store = Store::default();        
+        let mut store = Store::default();
 
         let mem_type = MemoryType::new(22, None, false);
         let memory = Memory::new(&mut store, mem_type).unwrap();
@@ -285,13 +285,17 @@ mod wasm {
         }
         debug!("> Will compile black box functions vendor module");
         let js_module_promise = WebAssembly::compile(&js_bytes);
-        let js_module:js_sys::WebAssembly::Module = wasm_bindgen_futures::JsFuture::from(js_module_promise).await.unwrap().into();
-        
+        let js_module: js_sys::WebAssembly::Module =
+            wasm_bindgen_futures::JsFuture::from(js_module_promise).await.unwrap().into();
+
         debug!("> Will create black box functions vendor instance");
-        let js_instance_promise = WebAssembly::instantiate_module(&js_module, &custom_imports.as_jsvalue(&store).into());
+        let js_instance_promise =
+            WebAssembly::instantiate_module(&js_module, &custom_imports.as_jsvalue(&store).into());
         let js_instance = wasm_bindgen_futures::JsFuture::from(js_instance_promise).await.unwrap();
         let module: wasmer::Module = (js_module, wasm_binary).into();
-        let instance: wasmer::Instance = Instance::from_jsvalue(&mut store, &module, &js_instance).map_err(|_| { FeatureError::BlackaBoxInstanceFailed } ).unwrap();
+        let instance: wasmer::Instance = Instance::from_jsvalue(&mut store, &module, &js_instance)
+            .map_err(|_| FeatureError::BlackBoxInstanceFailed)
+            .unwrap();
 
         (instance, memory, store)
     }
