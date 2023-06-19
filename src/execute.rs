@@ -1,14 +1,11 @@
 use acvm::{
     acir::{
-        circuit::{
-            opcodes::{FunctionInput, OracleData},
-            Circuit,
-        },
+        circuit::{opcodes::FunctionInput, Circuit},
         native_types::{Witness, WitnessMap},
         BlackBoxFunc,
     },
     pwg::{
-        block::Blocks, witness_to_value, OpcodeResolution, OpcodeResolutionError,
+        insert_value, witness_to_value, Blocks, OpcodeResolution, OpcodeResolutionError,
         PartialWitnessGeneratorStatus,
     },
     FieldElement, PartialWitnessGenerator,
@@ -18,7 +15,7 @@ use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 use crate::{
     barretenberg::{pedersen::Pedersen, scalar_mul::ScalarMul, schnorr::SchnorrSig, Barretenberg},
-    foreign_calls::{resolve_oracle, OracleCallback},
+    foreign_calls::ForeignCallHandler,
     JsWitnessMap,
 };
 
@@ -100,7 +97,7 @@ impl PartialWitnessGenerator for SimulatedBackend {
             dbg!("signature has failed to verify");
         }
 
-        initial_witness.insert(*output, FieldElement::from(valid_signature));
+        insert_value(output, FieldElement::from(valid_signature), initial_witness)?;
         Ok(OpcodeResolution::Solved)
     }
 
@@ -119,8 +116,8 @@ impl PartialWitnessGenerator for SimulatedBackend {
         let (res_x, res_y) = self.blackbox_vendor.encrypt(scalars).map_err(|err| {
             OpcodeResolutionError::BlackBoxFunctionFailed(BlackBoxFunc::Pedersen, err.to_string())
         })?;
-        initial_witness.insert(outputs[0], res_x);
-        initial_witness.insert(outputs[1], res_y);
+        insert_value(&outputs[0], res_x, initial_witness)?;
+        insert_value(&outputs[1], res_y, initial_witness)?;
         Ok(OpcodeResolution::Solved)
     }
 
@@ -139,8 +136,8 @@ impl PartialWitnessGenerator for SimulatedBackend {
             )
         })?;
 
-        initial_witness.insert(outputs[0], pub_x);
-        initial_witness.insert(outputs[1], pub_y);
+        insert_value(&outputs[0], pub_x, initial_witness)?;
+        insert_value(&outputs[1], pub_y, initial_witness)?;
         Ok(OpcodeResolution::Solved)
     }
 }
@@ -149,13 +146,13 @@ impl PartialWitnessGenerator for SimulatedBackend {
 ///
 /// @param {Uint8Array} circuit - A serialized representation of an ACIR circuit
 /// @param {WitnessMap} initial_witness - The initial witness map defining all of the inputs to `circuit`..
-/// @param {OracleCallback} oracle_callback - A callback to process oracle calls from the circuit.
+/// @param {ForeignCallHandler} foreign_call_handler - A callback to process any foreign calls from the circuit.
 /// @returns {WitnessMap} The solved witness calculated by executing the circuit on the provided inputs.
 #[wasm_bindgen(js_name = executeCircuit, skip_jsdoc)]
 pub async fn execute_circuit(
     circuit: Vec<u8>,
     initial_witness: JsWitnessMap,
-    oracle_callback: OracleCallback,
+    _foreign_call_handler: ForeignCallHandler,
 ) -> Result<JsWitnessMap, JsValue> {
     console_error_panic_hook::set_once();
     let circuit: Circuit = Circuit::read(&*circuit).expect("Failed to deserialize circuit");
@@ -173,13 +170,10 @@ pub async fn execute_circuit(
         match solver_status {
             PartialWitnessGeneratorStatus::Solved => break,
             PartialWitnessGeneratorStatus::RequiresOracleData {
-                required_oracle_data,
+                required_oracle_data: _,
                 unsolved_opcodes,
                 unresolved_brillig_calls: _,
             } => {
-                process_oracle_calls(&mut witness_map, &oracle_callback, required_oracle_data)
-                    .await?;
-
                 // TODO: add handling for `Brillig` opcodes.
 
                 // Use new opcodes as returned by ACVM.
@@ -189,47 +183,4 @@ pub async fn execute_circuit(
     }
 
     Ok(witness_map.into())
-}
-
-/// Performs the foreign calls associated with [`unresolved_oracle_calls`][OracleData] and writes the results to [`witness_map`][WitnessMap].
-async fn process_oracle_calls(
-    witness_map: &mut WitnessMap,
-    oracle_callback: &OracleCallback,
-    unresolved_oracle_calls: Vec<OracleData>,
-) -> Result<(), String> {
-    // Perform all oracle queries
-    let oracle_call_futures: Vec<_> = unresolved_oracle_calls
-        .into_iter()
-        .map(|oracle_call| resolve_oracle(oracle_callback, oracle_call))
-        .collect();
-
-    // Insert results into the witness map
-    for oracle_call_future in oracle_call_futures {
-        let resolved_oracle_call: OracleData = oracle_call_future.await.unwrap();
-        for (i, witness_index) in resolved_oracle_call.outputs.iter().enumerate() {
-            insert_value(witness_index, resolved_oracle_call.output_values[i], witness_map)
-                .map_err(|err| err.to_string())?;
-        }
-    }
-
-    Ok(())
-}
-
-fn insert_value(
-    witness: &Witness,
-    value_to_insert: FieldElement,
-    initial_witness: &mut WitnessMap,
-) -> Result<(), OpcodeResolutionError> {
-    let optional_old_value = initial_witness.insert(*witness, value_to_insert);
-
-    let old_value = match optional_old_value {
-        Some(old_value) => old_value,
-        None => return Ok(()),
-    };
-
-    if old_value != value_to_insert {
-        return Err(OpcodeResolutionError::UnsatisfiedConstrain);
-    }
-
-    Ok(())
 }
