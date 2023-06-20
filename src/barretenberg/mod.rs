@@ -102,6 +102,12 @@ mod wasm {
         }
     }
 
+    impl From<u32> for WASMValue {
+        fn from(value: u32) -> Self {
+            WASMValue(Some(Value::I32(value as i32)))
+        }
+    }
+
     impl From<i32> for WASMValue {
         fn from(value: i32) -> Self {
             WASMValue(Some(Value::I32(value)))
