@@ -5,9 +5,9 @@ if [ -d ./pkg/ ]; then
     rm -rf ./pkg/
 fi
 
-WASM_BINARY=./target/wasm32-unknown-unknown/release/acvm_simulator.wasm
-NODE_WASM=./pkg/nodejs/acvm_simulator_bg.wasm
-BROWSER_WASM=./pkg/nodejs/acvm_simulator_bg.wasm
+WASM_BINARY=./target/wasm32-unknown-unknown/release/acvm_js.wasm
+NODE_WASM=./pkg/nodejs/acvm_js_bg.wasm
+BROWSER_WASM=./pkg/nodejs/acvm_js_bg.wasm
 
 # Build the new wasm package
 cargo build --lib --release --target wasm32-unknown-unknown

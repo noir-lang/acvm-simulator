@@ -1,6 +1,6 @@
-# ACVM Simulator
+# ACVM-js
 
-The ACVM Simulator enables users to execute an ACIR program, i.e. generating an initial witness from a set of inputs and calculating a partial witness. This partial witness can then be used to create a proof of execution using an ACVM backend.
+The ACVM-js enables users to execute an ACIR program, i.e. generating an initial witness from a set of inputs and calculating a partial witness. This partial witness can then be used to create a proof of execution using an ACVM backend.
 
 ## Dependencies
 
