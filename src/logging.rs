@@ -14,7 +14,7 @@ extern "C" {
     pub type LogLevel;
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_name = initLogLevel)]
 pub fn init_log_level(level: LogLevel) {
     // Set the static variable from Rust
     use std::sync::Once;
