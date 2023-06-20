@@ -8,7 +8,7 @@ const LOG_LEVEL: &'static str = r#"
 * @typedef {Object} BuildInfo - Information about how the installed package was built
 * @property {string} gitHash - The hash of the git commit from which the package was built. 
 * @property {string} version - The version of the package at the built git commit.
-* @property {string} dirty - Whether the package contained uncommited changes when built.
+* @property {string} dirty - Whether the package contained uncommitted changes when built.
  */
 export type BuildInfo = {
   gitHash: string;
