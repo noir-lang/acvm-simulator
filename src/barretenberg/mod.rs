@@ -247,7 +247,7 @@ mod wasm {
         debug!("> Will Load black box functions vendor binary");
         let mut store = Store::default();
 
-        let mem_type = MemoryType::new(22, None, false);
+        let mem_type = MemoryType::new(23, None, false);
         let memory = Memory::new(&mut store, mem_type).unwrap();
 
         let function_env = FunctionEnv::new(&mut store, memory.clone());
