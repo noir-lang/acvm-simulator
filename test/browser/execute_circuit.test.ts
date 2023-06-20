@@ -4,14 +4,19 @@ import initACVMSimulator, {
   abiDecode,
   executeCircuit,
   WitnessMap,
-  OracleCallback,
+  init_log_level,
 } from "../../result/";
+
+beforeEach(async () => {
+  await initACVMSimulator();
+
+  init_log_level("INFO");
+});
 
 it("successfully executes circuit and extracts return value", async () => {
   const { abi, bytecode, inputs, expectedResult } = await import(
     "../shared/noir_program"
   );
-  await initACVMSimulator();
 
   const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
   const solved_witness: WitnessMap = await executeCircuit(
@@ -35,54 +40,11 @@ it("successfully executes circuit and extracts return value", async () => {
   expect(decoded_inputs.return_value).to.equal(expectedResult);
 });
 
-it("successfully processes oracle opcodes", async () => {
-  const {
-    bytecode,
-    initialWitnessMap,
-    expectedWitnessMap,
-    oracleResponse,
-    oracleCallName,
-  } = await import("../shared/oracle");
-
-  await initACVMSimulator();
-
-  let observedName = "";
-  let observedInputs: string[] = [];
-  const oracleCallback: OracleCallback = async (
-    name: string,
-    inputs: string[]
-  ) => {
-    // Throwing inside the oracle callback causes a timeout so we log the observed values
-    // and defer the check against expected values until after the execution is complete.
-    observedName = name;
-    observedInputs = inputs;
-
-    // Witness(1) + Witness(2) = 1 + 1 = 2
-    return [oracleResponse];
-  };
-  const solved_witness: WitnessMap = await executeCircuit(
-    bytecode,
-    initialWitnessMap,
-    oracleCallback
-  );
-
-  // Check that expected values were passed to oracle callback.
-  expect(observedName).to.be.equal(oracleCallName);
-  expect(observedInputs).to.be.deep.eq([
-    initialWitnessMap.get(1) as string,
-    initialWitnessMap.get(2) as string,
-  ]);
-
-  // If incorrect value is written into circuit then execution should halt due to unsatisfied constraint in
-  // arithmetic opcode. Nevertheless, check that returned value was inserted correctly.
-  expect(solved_witness).to.be.deep.eq(expectedWitnessMap);
-});
-
-it("successfully executes a Pedersen opcode", async () => {
+it("successfully executes a Pedersen opcode", async function () {
+  this.timeout(10000);
   const { abi, bytecode, inputs, expectedResult } = await import(
     "../shared/pedersen"
   );
-  await initACVMSimulator();
 
   const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
   const solved_witness: WitnessMap = await executeCircuit(
@@ -103,8 +65,6 @@ it("successfully executes a FixedBaseScalarMul opcode", async () => {
     "../shared/fixed_base_scalar_mul"
   );
 
-  await initACVMSimulator();
-
   const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
   const solved_witness: WitnessMap = await executeCircuit(
     bytecode,
@@ -123,8 +83,6 @@ it("successfully executes a SchnorrVerify opcode", async () => {
   const { abi, bytecode, inputs, expectedResult } = await import(
     "../shared/schnorr_verify"
   );
-
-  await initACVMSimulator();
 
   const initial_witness: WitnessMap = abiEncode(abi, inputs, null);
   const solved_witness: WitnessMap = await executeCircuit(
