@@ -12,7 +12,7 @@ mod abi;
 mod barretenberg;
 mod compression;
 mod execute;
-mod foreign_calls;
+mod foreign_call;
 mod js_transforms;
 mod public_witness;
 

@@ -1,24 +1,24 @@
-use acvm::{
-    acir::brillig_vm::{ForeignCallResult, Value},
-    pwg::ForeignCallWaitInfo,
-    FieldElement,
-};
+use acvm::{acir::brillig_vm::ForeignCallResult, pwg::ForeignCallWaitInfo};
 
 use js_sys::JsString;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
-use crate::js_transforms::{field_element_to_js_string, js_value_to_field_element};
+mod inputs;
+mod outputs;
 
 #[wasm_bindgen(typescript_custom_section)]
 const FOREIGN_CALL_HANDLER: &'static str = r#"
+export type ForeignCallInput = string[]
+export type ForeignCallOutput = string | string[]
+
 /**
 * A callback which performs an foreign call and returns the response.
 * @callback ForeignCallHandler
 * @param {string} name - The identifier for the type of foreign call being performed.
-* @param {string[]} inputs - An array of hex encoded inputs to the foreign call.
+* @param {string[][]} inputs - An array of hex encoded inputs to the foreign call.
 * @returns {Promise<string[]>} outputs - An array of hex encoded outputs containing the results of the foreign call.
 */
-export type ForeignCallHandler = (name: string, inputs: string[]) => Promise<string[]>;
+export type ForeignCallHandler = (name: string, inputs: ForeignCallInput[]) => Promise<ForeignCallOutput[]>;
 "#;
 
 #[wasm_bindgen]
@@ -32,27 +32,15 @@ pub(super) async fn resolve_brillig(
     foreign_call_wait_info: &ForeignCallWaitInfo,
 ) -> Result<ForeignCallResult, String> {
     // Prepare to call
-    let (name, inputs) = prepare_brillig_args(foreign_call_wait_info);
+    let name = JsString::from(foreign_call_wait_info.function.clone());
+    let inputs = inputs::encode_foreign_call_inputs(&foreign_call_wait_info.inputs);
 
     // Perform foreign call
     let outputs = perform_foreign_call(foreign_call_callback, name, inputs).await?;
 
     // The Brillig VM checks that the number of return values from
     // the foreign call is valid so we don't need to do it here.
-    let values = outputs.into_iter().map(Value::from).collect();
-    Ok(ForeignCallResult { values })
-}
-
-fn prepare_brillig_args(brillig_call_info: &ForeignCallWaitInfo) -> (JsString, js_sys::Array) {
-    let function = JsString::from(brillig_call_info.function.clone());
-
-    let inputs = js_sys::Array::default();
-    for input in &brillig_call_info.inputs {
-        let hex_js_string = field_element_to_js_string(&input.to_field());
-        inputs.push(&hex_js_string);
-    }
-
-    (function, inputs)
+    outputs::decode_foreign_call_result(outputs)
 }
 
 #[allow(dead_code)]
@@ -60,7 +48,7 @@ async fn perform_foreign_call(
     foreign_call_handler: &ForeignCallHandler,
     name: JsString,
     inputs: js_sys::Array,
-) -> Result<Vec<FieldElement>, String> {
+) -> Result<js_sys::Array, String> {
     // Call and await
     let this = JsValue::null();
     let ret_js_val = foreign_call_handler
@@ -74,19 +62,10 @@ async fn perform_foreign_call(
 
     // Check that result conforms to expected shape.
     if !js_resolution.is_array() {
-        return Err("`foreign_call_handler` must return a Promise<string[]>".into());
-    }
-    let js_arr = js_sys::Array::from(&js_resolution);
-
-    let mut outputs = Vec::with_capacity(js_arr.length() as usize);
-    for elem in js_arr.iter() {
-        if !elem.is_string() {
-            return Err("Non-string element in oracle_resolver return".into());
-        }
-        outputs.push(js_value_to_field_element(elem)?)
+        return Err("`foreign_call_handler` must return a Promise<ForeignCallValue[]>".into());
     }
 
-    Ok(outputs)
+    Ok(js_sys::Array::from(&js_resolution))
 }
 
 #[allow(dead_code)]

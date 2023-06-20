@@ -15,7 +15,7 @@ use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 use crate::{
     barretenberg::{pedersen::Pedersen, scalar_mul::ScalarMul, schnorr::SchnorrSig, Barretenberg},
-    foreign_calls::{resolve_brillig, ForeignCallHandler},
+    foreign_call::{resolve_brillig, ForeignCallHandler},
     JsWitnessMap,
 };
 
