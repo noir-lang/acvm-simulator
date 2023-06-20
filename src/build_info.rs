@@ -5,7 +5,6 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen(typescript_custom_section)]
 const LOG_LEVEL: &'static str = r#"
 /**
- * A callback which performs an foreign call and returns the response.
 * @typedef {Object} BuildInfo - Information about how the installed package was built
 * @property {string} gitHash - The hash of the git commit from which the package was built. 
 * @property {string} version - The version of the package at the built git commit.
