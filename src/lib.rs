@@ -3,9 +3,7 @@
 
 use gloo_utils::format::JsValueSerdeExt;
 use js_sys::Map;
-use log::Level;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
 mod abi;
@@ -14,11 +12,13 @@ mod compression;
 mod execute;
 mod foreign_calls;
 mod js_transforms;
+mod logging;
 mod public_witness;
 
 pub use abi::{abi_decode, abi_encode};
 pub use compression::{compress_witness, decompress_witness};
 pub use execute::execute_circuit;
+pub use logging::{init_log_level, LogLevel};
 pub use public_witness::{get_public_parameters_witness, get_public_witness, get_return_witness};
 
 #[derive(Serialize, Deserialize)]
@@ -26,18 +26,6 @@ pub struct BuildInfo {
     git_hash: &'static str,
     version: &'static str,
     dirty: &'static str,
-}
-
-#[wasm_bindgen]
-pub fn init_log_level(level: String) {
-    // Set the static variable from Rust
-    use std::sync::Once;
-
-    let log_level = Level::from_str(&level).unwrap_or(Level::Error);
-    static SET_HOOK: Once = Once::new();
-    SET_HOOK.call_once(|| {
-        wasm_logger::init(wasm_logger::Config::new(log_level));
-    });
 }
 
 const BUILD_INFO: BuildInfo = BuildInfo {
