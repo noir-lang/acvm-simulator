@@ -7,7 +7,7 @@ use acvm::{
 use js_sys::JsString;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
-use crate::js_transforms::{field_element_to_js_string, js_value_to_field_element};
+use crate::js_witness_map::{field_element_to_js_string, js_value_to_field_element};
 
 #[wasm_bindgen(typescript_custom_section)]
 const FOREIGN_CALL_HANDLER: &'static str = r#"
