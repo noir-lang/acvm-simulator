@@ -36,20 +36,22 @@ pub(super) async fn resolve_brillig(
 
     // Perform foreign call
     let outputs = perform_foreign_call(foreign_call_callback, name, inputs).await?;
-
+    let outputs: Vec<Value> = outputs.iter().map(|output| (*output).into()).collect();
     // The Brillig VM checks that the number of return values from
     // the foreign call is valid so we don't need to do it here.
-    let values = outputs.into_iter().map(Value::from).collect();
-    Ok(ForeignCallResult { values })
+    Ok(outputs.into())
 }
 
 fn prepare_brillig_args(brillig_call_info: &ForeignCallWaitInfo) -> (JsString, js_sys::Array) {
     let function = JsString::from(brillig_call_info.function.clone());
 
+    // Flatten all the args into one field array
     let inputs = js_sys::Array::default();
-    for input in &brillig_call_info.inputs {
-        let hex_js_string = field_element_to_js_string(&input.to_field());
-        inputs.push(&hex_js_string);
+    for input_array in &brillig_call_info.inputs {
+        for input in input_array {
+            let hex_js_string = field_element_to_js_string(&input.to_field());
+            inputs.push(&hex_js_string);
+        }
     }
 
     (function, inputs)
