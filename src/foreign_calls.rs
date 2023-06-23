@@ -4,6 +4,7 @@ use acvm::{
     FieldElement,
 };
 
+use iter_extended::vecmap;
 use js_sys::JsString;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
@@ -36,7 +37,7 @@ pub(super) async fn resolve_brillig(
 
     // Perform foreign call
     let outputs = perform_foreign_call(foreign_call_callback, name, inputs).await?;
-    let outputs: Vec<Value> = outputs.iter().map(|output| (*output).into()).collect();
+    let outputs: Vec<Value> = vecmap(outputs, |output| output.into());
     // The Brillig VM checks that the number of return values from
     // the foreign call is valid so we don't need to do it here.
     Ok(outputs.into())
