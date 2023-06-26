@@ -1,6 +1,6 @@
 use acvm::acir::brillig_vm::Value;
 
-use crate::js_transforms::field_element_to_js_string;
+use crate::js_witness_map::field_element_to_js_string;
 
 pub(super) fn encode_foreign_call_inputs(foreign_call_inputs: &[Vec<Value>]) -> js_sys::Array {
     let inputs = js_sys::Array::default();

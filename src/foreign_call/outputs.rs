@@ -1,7 +1,7 @@
 use acvm::acir::brillig_vm::{ForeignCallOutput, ForeignCallResult, Value};
 use wasm_bindgen::JsValue;
 
-use crate::js_transforms::js_value_to_field_element;
+use crate::js_witness_map::js_value_to_field_element;
 
 fn decode_foreign_call_output(output: JsValue) -> Result<ForeignCallOutput, String> {
     if output.is_string() {
