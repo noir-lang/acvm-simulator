@@ -1,15 +1,9 @@
 import { expect } from "chai";
-import {
-  abiEncode,
-  abiDecode,
-  executeCircuit,
-  WitnessMap,
-} from "../../result/";
+import { executeCircuit, WitnessMap } from "../../result/";
 
 it("successfully executes circuit and extracts return value", async () => {
-  const { bytecode, initialWitnessMap, resultWitness, expectedResult } = await import(
-    "../shared/noir_program"
-  );
+  const { bytecode, initialWitnessMap, resultWitness, expectedResult } =
+    await import("../shared/noir_program");
 
   const solvedWitness: WitnessMap = await executeCircuit(
     bytecode,

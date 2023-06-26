@@ -1,7 +1,5 @@
 import { expect } from "@esm-bundle/chai";
 import initACVM, {
-  abiEncode,
-  abiDecode,
   executeCircuit,
   WitnessMap,
   initLogLevel,
@@ -14,9 +12,8 @@ beforeEach(async () => {
 });
 
 it("successfully executes circuit and extracts return value", async () => {
-  const { bytecode, initialWitnessMap, resultWitness, expectedResult } = await import(
-    "../shared/noir_program"
-  );
+  const { bytecode, initialWitnessMap, resultWitness, expectedResult } =
+    await import("../shared/noir_program");
 
   const solvedWitness: WitnessMap = await executeCircuit(
     bytecode,
