@@ -97,7 +97,9 @@ export const initialWitnessMap: WitnessMap = new Map([
 ]);
 
 export const oracleCallName = "invert";
-export const oracleCallInputs = [["0x0000000000000000000000000000000000000000000000000000000000000005"]];
+export const oracleCallInputs = [
+  ["0x0000000000000000000000000000000000000000000000000000000000000005"],
+];
 
 export const oracleResponse =
   "0x135b52945a13d9aa49b9b57c33cd568ba9ae5ce9ca4a2d06e7f3fbd4c6666667";
