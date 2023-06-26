@@ -181,8 +181,8 @@ pub async fn execute_circuit(
                     process_brillig_calls(&foreign_call_handler, unresolved_brillig_calls).await?;
 
                 // Use new opcodes as returned by ACVM.
-                opcodes = unsolved_opcodes;
-                opcodes.extend(new_brillig_opcodes);
+                opcodes = new_brillig_opcodes;
+                opcodes.extend(unsolved_opcodes);
             }
         }
     }
