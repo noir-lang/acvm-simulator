@@ -96,7 +96,7 @@
 
       commonArgs = {
         pname = "acvm_simulator";
-        version = "0.0.0"; # x-release-please-version
+        version = "1.0.0"; # x-release-please-version
 
         src = pkgs.lib.cleanSourceWith {
           src = craneLib.path ./.;
