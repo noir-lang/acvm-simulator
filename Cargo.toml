@@ -14,7 +14,7 @@ rust-version = "1.66"
 crate-type = ["cdylib"]
 
 [dependencies]
-acvm = "0.15.0"
+acvm = "0.15.1"
 iter-extended = { git = "https://github.com/noir-lang/noir", rev = "3109239f2c0a7ad4767a3cd1bcc4436a367a8860"}
 noirc_abi = { git = "https://github.com/noir-lang/noir", rev = "3109239f2c0a7ad4767a3cd1bcc4436a367a8860"}
 wasm-bindgen = { version = "0.2.86", features = ["serde-serialize"] }
@@ -42,6 +42,3 @@ pkg-config = "0.3"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.36"
-
-[patch.crates-io]
-acvm = { git = "https://github.com/noir-lang/acvm", rev = "d2f37c1b441c9fc7b7553b192c6fec2fb4bae14a"}
