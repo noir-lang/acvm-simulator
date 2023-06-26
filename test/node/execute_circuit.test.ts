@@ -55,7 +55,6 @@ it("successfully processes brillig foreign call opcodes", async () => {
     observedName = name;
     observedInputs = inputs;
 
-    // Witness(1) + Witness(2) = 1 + 1 = 2
     return [oracleResponse];
   };
   const solved_witness: WitnessMap = await executeCircuit(
