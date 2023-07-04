@@ -1,14 +1,7 @@
 use acvm::{
-    acir::{
-        circuit::{opcodes::FunctionInput, Circuit},
-        native_types::{Witness, WitnessMap},
-        BlackBoxFunc,
-    },
-    pwg::{
-        insert_value, witness_to_value, Blocks, OpcodeResolution, OpcodeResolutionError,
-        PartialWitnessGeneratorStatus,
-    },
-    FieldElement, PartialWitnessGenerator,
+    acir::{circuit::Circuit, BlackBoxFunc},
+    pwg::{OpcodeResolutionError, PartialWitnessGeneratorStatus, ACVM},
+    BlackBoxFunctionSolver, FieldElement,
 };
 
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
@@ -30,118 +23,50 @@ impl SimulatedBackend {
     }
 }
 
-impl PartialWitnessGenerator for SimulatedBackend {
+impl BlackBoxFunctionSolver for SimulatedBackend {
     fn schnorr_verify(
         &self,
-        initial_witness: &mut WitnessMap,
-        public_key_x: &FunctionInput,
-        public_key_y: &FunctionInput,
-        signature: &[FunctionInput],
-        message: &[FunctionInput],
-        output: &Witness,
-    ) -> Result<OpcodeResolution, OpcodeResolutionError> {
-        // In barretenberg, if the signature fails, then the whole thing fails.
+        public_key_x: &FieldElement,
+        public_key_y: &FieldElement,
+        signature_s: &FieldElement,
+        signature_e: &FieldElement,
+        message: &[u8],
+    ) -> Result<bool, OpcodeResolutionError> {
+        let pub_key_bytes: Vec<u8> =
+            public_key_x.to_be_bytes().iter().copied().chain(public_key_y.to_be_bytes()).collect();
 
-        let pub_key_x = witness_to_value(initial_witness, public_key_x.witness)?.to_be_bytes();
-        let pub_key_y = witness_to_value(initial_witness, public_key_y.witness)?.to_be_bytes();
+        let pub_key: [u8; 64] = pub_key_bytes.try_into().unwrap();
+        let sig_s: [u8; 32] = signature_s.to_be_bytes().try_into().unwrap();
+        let sig_e: [u8; 32] = signature_e.to_be_bytes().try_into().unwrap();
 
-        let pub_key_bytes: Vec<u8> = pub_key_x.iter().copied().chain(pub_key_y.to_vec()).collect();
-        let pub_key: [u8; 64] = pub_key_bytes.try_into().map_err(|v: Vec<u8>| {
+        self.blackbox_vendor.verify_signature(pub_key, sig_s, sig_e, message).map_err(|err| {
             OpcodeResolutionError::BlackBoxFunctionFailed(
                 BlackBoxFunc::SchnorrVerify,
-                format!("expected pubkey size {} but received {}", 64, v.len()),
+                err.to_string(),
             )
-        })?;
-
-        let signature_bytes: Vec<u8> = signature
-            .iter()
-            .map(|sig_elem| {
-                witness_to_value(initial_witness, sig_elem.witness).map(|witness_value| {
-                    *witness_value.to_be_bytes().last().expect("byte array is never empty")
-                })
-            })
-            .collect::<Result<_, _>>()?;
-
-        let sig_s = signature_bytes[0..32].try_into().map_err(|_| {
-            OpcodeResolutionError::BlackBoxFunctionFailed(
-                BlackBoxFunc::SchnorrVerify,
-                format!("signature should be 64 bytes long, found only {} bytes", signature.len()),
-            )
-        })?;
-        let sig_e = signature_bytes[32..64].try_into().map_err(|_| {
-            OpcodeResolutionError::BlackBoxFunctionFailed(
-                BlackBoxFunc::SchnorrVerify,
-                format!("signature should be 64 bytes long, found only {} bytes", signature.len()),
-            )
-        })?;
-
-        let message_bytes: Vec<u8> = message
-            .iter()
-            .map(|message_elem| {
-                witness_to_value(initial_witness, message_elem.witness).map(|witness_value| {
-                    *witness_value.to_be_bytes().last().expect("byte array is never empty")
-                })
-            })
-            .collect::<Result<_, _>>()?;
-
-        let valid_signature = self
-            .blackbox_vendor
-            .verify_signature(pub_key, sig_s, sig_e, &message_bytes)
-            .map_err(|err| {
-                OpcodeResolutionError::BlackBoxFunctionFailed(
-                    BlackBoxFunc::SchnorrVerify,
-                    err.to_string(),
-                )
-            })?;
-        if !valid_signature {
-            dbg!("signature has failed to verify");
-        }
-
-        insert_value(output, FieldElement::from(valid_signature), initial_witness)?;
-        Ok(OpcodeResolution::Solved)
+        })
     }
 
     fn pedersen(
         &self,
-        initial_witness: &mut WitnessMap,
-        inputs: &[FunctionInput],
+        inputs: &[FieldElement],
         domain_separator: u32,
-        outputs: &[Witness],
-    ) -> Result<OpcodeResolution, OpcodeResolutionError> {
-        let scalars: Result<Vec<_>, _> =
-            inputs.iter().map(|input| witness_to_value(initial_witness, input.witness)).collect();
-        let scalars: Vec<_> = scalars?.into_iter().cloned().collect();
-
-        let (res_x, res_y) =
-            self.blackbox_vendor.encrypt(scalars, domain_separator).map_err(|err| {
-                OpcodeResolutionError::BlackBoxFunctionFailed(
-                    BlackBoxFunc::Pedersen,
-                    err.to_string(),
-                )
-            })?;
-        insert_value(&outputs[0], res_x, initial_witness)?;
-        insert_value(&outputs[1], res_y, initial_witness)?;
-        Ok(OpcodeResolution::Solved)
+    ) -> Result<(FieldElement, FieldElement), OpcodeResolutionError> {
+        self.blackbox_vendor.encrypt(inputs.to_vec(), domain_separator).map_err(|err| {
+            OpcodeResolutionError::BlackBoxFunctionFailed(BlackBoxFunc::Pedersen, err.to_string())
+        })
     }
 
     fn fixed_base_scalar_mul(
         &self,
-        initial_witness: &mut WitnessMap,
-        input: &FunctionInput,
-        outputs: &[Witness],
-    ) -> Result<OpcodeResolution, OpcodeResolutionError> {
-        let scalar = witness_to_value(initial_witness, input.witness)?;
-
-        let (pub_x, pub_y) = self.blackbox_vendor.fixed_base(scalar).map_err(|err| {
+        input: &FieldElement,
+    ) -> Result<(FieldElement, FieldElement), OpcodeResolutionError> {
+        self.blackbox_vendor.fixed_base(input).map_err(|err| {
             OpcodeResolutionError::BlackBoxFunctionFailed(
                 BlackBoxFunc::FixedBaseScalarMul,
                 err.to_string(),
             )
-        })?;
-
-        insert_value(&outputs[0], pub_x, initial_witness)?;
-        insert_value(&outputs[1], pub_y, initial_witness)?;
-        Ok(OpcodeResolution::Solved)
+        })
     }
 }
 
@@ -159,30 +84,21 @@ pub async fn execute_circuit(
 ) -> Result<JsWitnessMap, JsValue> {
     console_error_panic_hook::set_once();
     let circuit: Circuit = Circuit::read(&*circuit).expect("Failed to deserialize circuit");
-    let mut witness_map = WitnessMap::from(initial_witness);
 
     let backend = SimulatedBackend::initialize().await;
-    let mut blocks = Blocks::default();
-    let mut opcodes = circuit.opcodes;
+    let mut acvm = ACVM::new(backend, circuit.opcodes, initial_witness.into());
 
     loop {
-        let solver_status = acvm::pwg::solve(&backend, &mut witness_map, &mut blocks, opcodes)
-            .map_err(|err| err.to_string())?;
+        let solver_status = acvm.solve().map_err(|err| err.to_string())?;
 
         match solver_status {
             PartialWitnessGeneratorStatus::Solved => break,
-            PartialWitnessGeneratorStatus::RequiresOracleData {
-                required_oracle_data: _,
-                unsolved_opcodes,
-                unresolved_brillig_calls: _,
-            } => {
+            PartialWitnessGeneratorStatus::RequiresForeignCall { .. } => {
                 // TODO: add handling for `Brillig` opcodes.
-
-                // Use new opcodes as returned by ACVM.
-                opcodes = unsolved_opcodes;
             }
         }
     }
 
+    let witness_map = acvm.finalize();
     Ok(witness_map.into())
 }
