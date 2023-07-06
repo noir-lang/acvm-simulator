@@ -40,8 +40,8 @@ import { WitnessMap } from "../../result/";
 //         // Oracles are named 'foreign calls' in brillig
 //         brillig_vm::Opcode::ForeignCall {
 //             function: "invert".into(),
-//             destinations: vec![RegisterValueOrArray::RegisterIndex(RegisterIndex::from(1))],
-//             inputs: vec![RegisterValueOrArray::RegisterIndex(RegisterIndex::from(0))],
+//             destinations: vec![RegisterOrMemory::RegisterIndex(RegisterIndex::from(1))],
+//             inputs: vec![RegisterOrMemory::RegisterIndex(RegisterIndex::from(0))],
 //         },
 //     ],
 //     predicate: None,
@@ -101,8 +101,9 @@ export const oracleCallInputs = [
   ["0x0000000000000000000000000000000000000000000000000000000000000005"],
 ];
 
-export const oracleResponse =
-  "0x135b52945a13d9aa49b9b57c33cd568ba9ae5ce9ca4a2d06e7f3fbd4c6666667";
+export const oracleResponse = [
+  "0x135b52945a13d9aa49b9b57c33cd568ba9ae5ce9ca4a2d06e7f3fbd4c6666667",
+];
 
 export const expectedWitnessMap = new Map([
   [1, "0x0000000000000000000000000000000000000000000000000000000000000002"],
