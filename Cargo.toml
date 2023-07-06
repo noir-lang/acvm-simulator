@@ -44,4 +44,4 @@ wasm-bindgen-test = "0.3.36"
 
 
 [patch.crates-io]
-acvm = { git = "https://github.com/noir-lang/acvm", rev = "69a6c224d80be556ac5388ffeb7a02424df22031" }
+acvm = { git = "https://github.com/noir-lang/acvm", rev = "fc3240d456d0128f6eb42096beb8b7a586ea48da" }

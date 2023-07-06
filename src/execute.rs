@@ -1,10 +1,10 @@
 use acvm::{
     acir::{circuit::Circuit, BlackBoxFunc},
-    pwg::{OpcodeResolutionError, PartialWitnessGeneratorStatus, ACVM},
+    pwg::{ACVMStatus, OpcodeResolutionError, ACVM},
     BlackBoxFunctionSolver, FieldElement,
 };
 
-use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
+use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::{
     barretenberg::{pedersen::Pedersen, scalar_mul::ScalarMul, schnorr::SchnorrSig, Barretenberg},
@@ -28,16 +28,15 @@ impl BlackBoxFunctionSolver for SimulatedBackend {
         &self,
         public_key_x: &FieldElement,
         public_key_y: &FieldElement,
-        signature_s: &FieldElement,
-        signature_e: &FieldElement,
+        signature: &[u8],
         message: &[u8],
     ) -> Result<bool, OpcodeResolutionError> {
         let pub_key_bytes: Vec<u8> =
             public_key_x.to_be_bytes().iter().copied().chain(public_key_y.to_be_bytes()).collect();
 
         let pub_key: [u8; 64] = pub_key_bytes.try_into().unwrap();
-        let sig_s: [u8; 32] = signature_s.to_be_bytes().try_into().unwrap();
-        let sig_e: [u8; 32] = signature_e.to_be_bytes().try_into().unwrap();
+        let sig_s: [u8; 32] = signature[0..32].try_into().unwrap();
+        let sig_e: [u8; 32] = signature[32..64].try_into().unwrap();
 
         self.blackbox_vendor.verify_signature(pub_key, sig_s, sig_e, message).map_err(|err| {
             OpcodeResolutionError::BlackBoxFunctionFailed(
@@ -81,7 +80,7 @@ pub async fn execute_circuit(
     circuit: Vec<u8>,
     initial_witness: JsWitnessMap,
     _foreign_call_handler: ForeignCallHandler,
-) -> Result<JsWitnessMap, JsValue> {
+) -> Result<JsWitnessMap, js_sys::JsString> {
     console_error_panic_hook::set_once();
     let circuit: Circuit = Circuit::read(&*circuit).expect("Failed to deserialize circuit");
 
@@ -89,11 +88,15 @@ pub async fn execute_circuit(
     let mut acvm = ACVM::new(backend, circuit.opcodes, initial_witness.into());
 
     loop {
-        let solver_status = acvm.solve().map_err(|err| err.to_string())?;
+        let solver_status = acvm.solve();
 
         match solver_status {
-            PartialWitnessGeneratorStatus::Solved => break,
-            PartialWitnessGeneratorStatus::RequiresForeignCall { .. } => {
+            ACVMStatus::Solved => break,
+            ACVMStatus::InProgress => {
+                unreachable!("Execution should not stop while in `InProgress` state.")
+            }
+            ACVMStatus::Failure(error) => return Err(error.to_string().into()),
+            ACVMStatus::RequiresForeignCall { .. } => {
                 // TODO: add handling for `Brillig` opcodes.
             }
         }
