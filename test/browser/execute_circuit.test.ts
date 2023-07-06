@@ -117,5 +117,5 @@ it("successfully executes a SchnorrVerify opcode", async () => {
     }
   );
 
-  expect(solvedWitness).to.be.eq(expectedWitnessMap);
+  expect(solvedWitness).to.be.deep.eq(expectedWitnessMap);
 });
